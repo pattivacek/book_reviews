@@ -1,0 +1,176 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry} % Force 1-inch margins on all sides
+\usepackage{indentfirst} % Force indenting first paragraph of each section
+\usepackage{verbatim} % For multi-line/block comments
+
+\usepackage{sectsty} % Allow resizing section font size
+\sectionfont{\fontsize{14}{8}\selectfont} % Reduce section font size
+% \usepackage{microtype} % may help with overfull hbox, but in practice doesn't really do much
+
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref} % Make all cross-references into hyperlinks, and allow line breaking on hyphens
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=cyan,
+} % options for hyperlinks
+% \usepackage[hypcap]{caption} % may solve hyperlink refs linking to immediately below the desired label
+
+%\usepackage[T1]{fontenc} % Correct printing of special characters. Seems to mess up copying text, though.
+\usepackage[utf8]{inputenc} % Allow direct input of 8-byte special characters such as umlauts.
+%\usepackage{lmodern} % Use this if available, or try installing cm-super to get pdf copying to work correctly.
+
+% For Chinese characters used for the Dao De Jing...
+% See http://tex.stackexchange.com/questions/17611/how-does-one-type-chinese-in-latex
+%\usepackage{CJKutf8}
+%\AtBeginDvi{\input{zhwinfonts}}
+
+
+% This block configures table of contents sizing. Main purpose is to better
+% handle spacing between numbers and titles, but I also like the fact that it
+% resizes the text smaller.
+\makeatletter
+\renewcommand{\l@section}{\@dottedtocline{1}{1.5em}{2.6em}}
+\renewcommand{\l@subsection}{\@dottedtocline{2}{4.0em}{3.6em}}
+\renewcommand{\l@subsubsection}{\@dottedtocline{3}{7.4em}{4.5em}}
+\makeatother
+
+
+% First list title, author, and country. There are multiple options for
+% title/author.
+%
+% booktitle: The simplist case. A book with one author, with no special
+% characters in the title or author's name. 
+% booktitlelabel: Use if the title requires special handling, i.e. the label
+% needs to be different than the printed title.
+% booktitleauthor: Use if the author requires special handling, i.e. the label
+% needs to be different than the printed name.
+% booktitleauthortwo: Use if there are two authors, since they both require
+% their own labels.
+% booktitleauthorfive: Use if there are five authors.
+% booktitlelabelauthor: Use if there title and author both require special
+% handling.
+%
+% Currently, there is no support for books with 3, 4, 6, or more authors, and no
+% support for books with multiple authors and a title that needs special
+% handling. This can be added relatively easily, though.
+%
+% Special handling is required in two cases. First, special characters (accents)
+% must be stripped for labels. Second, authors with multiple last names
+% (including 'Jr.' and the like) require an underscore to link those names
+% together. This is required for proper sorting, which assumes the last word is
+% the last name.
+\newcommand{\booktitle}[3]{\section{\textit{#1} by \hyperref[sec:#2]{#2} (#3)} \label{sec:#1}}
+\newcommand{\booktitlelabel}[4]{\section{\textit{#1} by \hyperref[sec:#2]{#2} (#3)} \label{sec:#4}}
+\newcommand{\booktitleauthor}[4]{\section{\textit{#1} by \hyperref[sec:#4]{#2} (#3)} \label{sec:#1}}
+\newcommand{\booktitleauthortwo}[5]{\section{\textit{#1} by \hyperref[sec:#4]{#4} \& \hyperref[sec:#5]{#5} (#3)} \label{sec:#1}}
+\newcommand{\booktitleauthorfive}[8]{\section{\textit{#1} by \hyperref[sec:#4]{#4}, \hyperref[sec:#5]{#5}, \hyperref[sec:#6]{#6}, \hyperref[sec:#7]{#7}, \& \hyperref[sec:#8]{#8} (#3)} \label{sec:#1}}
+\newcommand{\booktitlelabelauthor}[5]{\section{\textit{#1} by \hyperref[sec:#5]{#2} (#3)} \label{sec:#4}}
+\newcommand{\country}[1]{\noindent \textsc{\hyperref[nation:#1]{#1}}}
+
+% Then list any categorizing information.
+\newcommand{\nonfiction}[0]{\\\textsc{\hyperref[category:nonfiction]{Nonfiction}}}
+\newcommand{\collection}[0]{\\\textsc{\hyperref[category:collection]{Collection}}}
+\newcommand{\novella}[0]{\\\textsc{\hyperref[category:novella]{Novella}}}
+\newcommand{\shortstory}[0]{\\\textsc{\hyperref[category:shortstory]{Short Story}}}
+\newcommand{\play}[0]{\\\textsc{\hyperref[category:play]{Play}}}
+\newcommand{\epicpoem}[0]{\\\textsc{\hyperref[category:epicpoem]{Epic Poem}}}
+\newcommand{\poetry}[0]{\\\textsc{\hyperref[category:poetry]{Poetry}}}
+\newcommand{\graphicnovel}[0]{\\\textsc{\hyperref[category:graphicnovel]{Graphic Novel}}}
+
+% Some items (particularly collections and poetry) may have original publication
+% information.
+\newcommand{\published}[2]{\\\textsc{Originally published between #1 and #2}}
+
+% Then list series/sequel information.
+\newcommand{\series}[3]{\\\textsc{Part #2 of #3 of the \textit{\hyperref[series:#1]{#1}} series}}
+\newcommand{\seriesunlimited}[2]{\\\textsc{Book #2 of the \textit{\hyperref[series:#1]{#1}} series}}
+\newcommand{\sequel}[1]{\\\textsc{Sequel to \textit{\hyperref[sec:#1]{#1}}}}
+
+% Then list information about my experience reading it, i.e. language and dates.
+% Re-readings can have multiple, seemingly redundant/conflicting items.
+\newcommand{\german}[1]{\\\textsc{Read in \hyperref[lang:German]{German}; known in English as \textit{#1}}}
+\newcommand{\germansame}[0]{\\\textsc{Read in \hyperref[lang:German]{German}}}
+\newcommand{\translated}[2]{\\\textsc{Translated from \hyperref[lang:#1]{#1} by #2}}
+\newcommand{\dates}[2]{\\\textsc{Started: #1; Finished: #2}}
+%\newcommand{\datesapprox}[2]{\\\textsc{Started: #1 (approximately); Finished: #2}} % Unused at present
+\newcommand{\finished}[1]{\\\textsc{Finished: #1}}
+\newcommand{\unfinished}[1]{\\\textsc{Started: #1; \hyperref[sec:unfinished_list]{Unfinished}}}
+\newcommand{\uncertain}[0]{\\\textsc{Dates read uncertain}}
+\newcommand{\unknown}[0]{\\\textsc{Dates read and ordering unknown}}
+\newcommand{\unknownunfinished}[0]{\\\textsc{Dates read and ordering unknown; \hyperref[sec:unfinished_list]{unfinished}}}
+\newcommand{\rereading}[0]{\\\textsc{\hyperref[sec:rereading_list]{Re-reading}:}}
+%\newcommand{\ordering}[1]{\\\textsc{Order read: \##1}} % Only used by calculate_stats.py
+
+% Finally, list the score.
+\newcommand{\score}[1]{\\\textsc{\hyperref[sec:score#1]{Score: #1/5}}}
+
+
+\title{Book Reviews and Commentary}
+\author{Patti Vacek}
+%\date{March 18, 2014} % Leave unspecified to use today's date
+
+\begin{document}
+\maketitle
+
+\section*{Overview}
+\hyperref[sec:intro]{Introduction} \dotfill \pageref{sec:intro}
+\\\indent\hyperref[sec:toc]{Complete List of Books Read} \dotfill \pageref{sec:toc}
+\\\indent\hyperref[sec:statistics]{Statistics and Categories} \dotfill \pageref{sec:statistics}
+
+
+\section*{Introduction} \label{sec:intro}
+
+The list serves to document every book I've ever read, including some that I started but didn't finish. Included with each book is some basic information about the book and what one could loosely define as a ``review''. These reviews sometime comprise my reactions to the book, sometimes contain the plot (including many spoilers!), and sometimes just explain the context around how I came to read the book. This type of information is interesting to probably just about nobody, and the original intended audience for this document was solely and singly myself. At a certain point, though, I realized that a limited number of people may have a passing interest in it, or at least in the scores or the source code. With that in mind, enjoy at your own risk.
+
+There are a few technical details still worth mentioning. First, publication dates listed are usually for the first edition, even if I read a subsequent edition or revision. Second, \hyperref[sec:finished_category]{categorization} is somewhat arbitrary, both in terms of what categories I've listed and what books are listed as what. The \hyperref[category:nonfiction]{nonfiction} and \hyperref[category:novel]{novel} categories are perhaps a bit too all-inclusive, and there is plenty of debate about the line between novels and \hyperref[category:novella]{novellas}. Older works tend to have especially large room for debate as to the ``correct'' categorization. I've used the term ``\hyperref[category:collection]{collection}'' to include both short story collections as well as ``complete works'' compendiums, such as \hyperref[sec:Wolfgang Borchert]{Wolfgang Borchert}'s \textit{\hyperref[sec:Das Gesamtwerk]{Das Gesamtwerk}}, which may include short stories, poetry, essays, and more. In all of these matters, I made a decision simply to make a decision, and I'm not particularly invested in it, so if you want to argue, go right ahead.
+
+Perhaps the largest opportunity for debate is the matter of nationality. I categorize books by the nation of origin of the author, which usually means where they spent most of their formative years, i.e.\ where they were raised and educated. This gets tricky with some authors, particularly those that split time between \hyperref[nation:England]{England}, \hyperref[nation:USA]{USA}, \hyperref[nation:Canada]{Canada}, or British colonies. For example, I list \hyperref[sec:Neil Young]{Neil Young} as Canadian, as that's where he grew up and where he still holds citizenship, despite that he has lived in California for almost his entire adult life. I list \hyperref[sec:Joseph Conrad]{Joseph Conrad} as \hyperref[nation:Poland]{Polish} and \hyperref[sec:Vladimir Nabokov]{Vladimir Nabokov} as \hyperref[nation:Russia]{Russian}, as those are the countries and cultures they were raised in. I have had extensive debates about the nationality of some authors that wrote in \hyperref[lang:German]{German} and lived in what was then \hyperref[nation:Austria]{Austro-Hungary} but is now an independent nation. This applies to \hyperref[sec:Franz Kafka]{Kafka}, \hyperref[sec:Rainer Maria Rilke]{Rilke}, and \hyperref[sec:Oedoen von Horvath]{Ödön von Horváth}, all of whom I once considered Austrian but have since been convinced otherwise. Works of fiction are categorized by the nation most relevant to the text, if applicable; otherwise by the origin of the author as with fiction. For biographies, I use the nationality of the subject, not the author.
+
+The last matter is scoring. I use the Goodreads model, which is a five-point scale. 5 means great (I loved it), 4 means really good (I really liked it), 3 means good (I liked it), 2 means okay, and 1 means bad or disappointing. This is distinctly different from the scoring I use on my music review blog (\url{https://metronomicunderground.com/}), which is the letter grade system as explained on the \href{https://metronomicunderground.com/p/about.html}{About} page. I mention this because I have reviewed several \href{https://metronomicunderground.com/search/label/book%20review}{books about music} on the blog, and I had to figure out how to translate that scoring metric into this one. There is some inconsistency, but generally, A+/A = 5, A-/B+ = 4, B/B- = 3, C = 2, and D/F = 1.
+
+
+% This label's pageref shows the end of the TOC instead of the start. Putting
+% the label before the TOC makes it show the end of the intro, which is probably
+% even less helpful.
+\tableofcontents \label{sec:toc}
+
+\begin{comment}
+
+\booktitle{Nostromo}{Joseph Conrad}{1904}
+\country{Poland}
+\dates{2016.06.12}{2016.08.14}
+\score{5}
+\medskip
+
+A decent full-text, annotated version of the book can be found here: \url{http://www.nostromoonline.com/}.
+
+
+\booktitle{Bleak House}{Charles Dickens}{1853}
+\country{England}
+\dates{2016.03.07}{2016.06.11}
+\score{4}
+\medskip
+
+The So Many Books blog has a two-part review of the book. The links are \url{https://somanybooksblog.com/2011/08/16/bleak-house-part-one/} and \url{https://somanybooksblog.com/2011/08/17/bleak-house-part-two/}.
+
+
+\booktitle{Das Glasperlenspiel}{Hermann Hesse}{1943}
+\country{Germany}
+\german{The Glass Bead Game}
+\dates{2015.12.15}{2016.05.24}
+\score{3}
+\medskip
+
+A dense philosophical analysis can be found here: \url{http://www.christinehoffkraemer.com/hesse.html}. That essay goes into some obscure places and is unnecessarily thick, but there are some decent ideas. A somewhat more proper review can be found here (\url{http://tomconoboy.blogspot.com/2011/04/glass-bead-game-by-hermann-hesse.html}) but it too isn't perfect. A fairly mediocre review can be found here (\url{https://matthewkirshenblatt.wordpress.com/2012/07/04/book-review-understanding-hermann-hesses-glass-bead-game/}).
+
+
+% Statistics! Do not add to the list of books.
+\clearpage
+\sectionfont{\fontsize{20}{12}\selectfont} % Larger section size
+\section*{Statistics} \label{sec:statistics}
+%\addcontentsline{toc}{section}{Statistics}
+\input{statistics.tex}
+
+
+\end{document}
