@@ -40,7 +40,7 @@
 % title/author.
 %
 % booktitle: The simplist case. A book with one author, with no special
-% characters in the title or author's name. 
+% characters in the title or author's name.
 % booktitlelabel: Use if the title requires special handling, i.e. the label
 % needs to be different than the printed title.
 % booktitleauthor: Use if the author requires special handling, i.e. the label
@@ -57,9 +57,9 @@
 %
 % Special handling is required in two cases. First, special characters (accents)
 % must be stripped for labels. Second, authors with multiple last names
-% (including 'Jr.' and the like) require an underscore to link those names
-% together. This is required for proper sorting, which assumes the last word is
-% the last name.
+% (including 'Jr.' and the like) require a hypen to link those names together.
+% This is required for proper sorting, which assumes the last word is the last
+% name.
 \newcommand{\booktitle}[3]{\section{\textit{#1} by \hyperref[sec:#2]{#2} (#3)} \label{sec:#1}}
 \newcommand{\booktitlelabel}[4]{\section{\textit{#1} by \hyperref[sec:#2]{#2} (#3)} \label{sec:#4}}
 \newcommand{\booktitleauthor}[4]{\section{\textit{#1} by \hyperref[sec:#4]{#2} (#3)} \label{sec:#1}}
