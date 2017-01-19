@@ -188,7 +188,7 @@ def main():
             author = title_line[2][:-1]
             year = title_line[3][:-1]
             if re.search(r'\\booktitlelabel', line):
-                # Also matches booktitlelabelauthor.
+                # Also matches booktitlelabelauthor snf booktitlelabelauthortwo.
                 reftitle = title_line[4][:-1]
             else:
                 reftitle = title
@@ -203,6 +203,10 @@ def main():
             elif re.search(r'\\booktitleauthor', line):
                 temp_author_sort = title_line[4][:-1]
                 temp_author_print = author
+            elif re.search(r'\\booktitlelabelauthortwo', line):
+                # Assume these author names are safe for labels for now.
+                temp_author_sort = title_line[5][:-1] + ' & ' + title_line[6][:-1]
+                temp_author_print = temp_author_sort
             elif re.search(r'\\booktitlelabelauthor', line):
                 temp_author_sort = title_line[5][:-1]
                 temp_author_print = author

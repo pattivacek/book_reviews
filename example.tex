@@ -50,9 +50,11 @@
 % booktitleauthorfive: Use if there are five authors.
 % booktitlelabelauthor: Use if there title and author both require special
 % handling.
+% booktitlelabelauthortwo: Use if there are two authors and title and author
+% both require special handling.
 %
 % Currently, there is no support for books with 3, 4, 6, or more authors, and no
-% support for books with multiple authors and a title that needs special
+% support for books with more than three authors and a title that needs special
 % handling. This can be added relatively easily, though.
 %
 % Special handling is required in two cases. First, special characters (accents)
@@ -66,6 +68,7 @@
 \newcommand{\booktitleauthortwo}[5]{\section{\textit{#1} by \hyperref[sec:#4]{#4} \& \hyperref[sec:#5]{#5} (#3)} \label{sec:#1}}
 \newcommand{\booktitleauthorfive}[8]{\section{\textit{#1} by \hyperref[sec:#4]{#4}, \hyperref[sec:#5]{#5}, \hyperref[sec:#6]{#6}, \hyperref[sec:#7]{#7}, \& \hyperref[sec:#8]{#8} (#3)} \label{sec:#1}}
 \newcommand{\booktitlelabelauthor}[5]{\section{\textit{#1} by \hyperref[sec:#5]{#2} (#3)} \label{sec:#4}}
+\newcommand{\booktitlelabelauthortwo}[6]{\section{\textit{#1} by \hyperref[sec:#5]{#5} \& \hyperref[sec:#6]{#6} (#3)} \label{sec:#4}}
 \newcommand{\country}[1]{\noindent \textsc{\hyperref[nation:#1]{#1}}}
 
 % Then list any categorizing information.
@@ -295,6 +298,16 @@ Neil Young's first autobiography. He spends a lot of time talking about model tr
 \dates{2013.06.02}{2013.06.14}
 \score{3}
 \medskip
+
+
+\booktitlelabelauthortwo{Das überzeugende Bewerbungsgespräch für Hochschulabsolventen}{Christian Püttjer & Uwe Schnierda}{2001}{Das ueberzeugende Bewerbungsgespraech fuer Hochschulabsolventen}{Christian Puettjer}{Uwe Schnierda}
+\country{Germany}
+\german{The Convincing Interview for University Graduates}
+\dates{2012.12.20}{2013.01.16}
+\score{3}
+\medskip
+
+Originally published as \textit{So überzeugen Sie im Bewerbungsgespräch: Die optimale Vorbereitung für Hochschulabsolventen}. The version I read was \textit{aktualisiert und überarbeitet} in 2008.
 
 
 \booktitle{Dao De Jing}{Laozi}{550 B.C.E.}
