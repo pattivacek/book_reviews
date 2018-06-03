@@ -3,12 +3,17 @@
 \usepackage[margin=1in]{geometry} % Force 1-inch margins on all sides
 \usepackage{indentfirst} % Force indenting first paragraph of each section
 \usepackage{verbatim} % For multi-line/block comments
+\usepackage[ngerman]{babel}
 
 \usepackage{sectsty} % Allow resizing section font size
 \sectionfont{\fontsize{14}{8}\selectfont} % Reduce section font size
 % \usepackage{microtype} % may help with overfull hbox, but in practice doesn't really do much
 
 \PassOptionsToPackage{hyphens}{url}\usepackage{hyperref} % Make all cross-references into hyperlinks, and allow line breaking on hyphens
+\pdfstringdefDisableCommands{
+  \def\hyperref#1{<#1>} % When building the table of contents, ignore the hyperref to the author. This prevents a bunch of errors, too.
+  \def\=#1{<#1>} % When building the table of contents, ignore the macron on the e of Agape
+}
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
@@ -36,10 +41,16 @@
 \makeatother
 
 
+% A few remaining formatting errors still persist. The worst two are that some
+% section titles (booktitle entries) don't get broken correctly for unclear
+% reasons and URLs have trouble getting broken, even though I allow breaking on
+% hyphens. I've tried a few other tricks without success.
+
+
 % First list title, author, and country. There are multiple options for
 % title/author.
 %
-% booktitle: The simplist case. A book with one author, with no special
+% booktitle: The simplest case. A book with one author, with no special
 % characters in the title or author's name.
 % booktitlelabel: Use if the title requires special handling, i.e. the label
 % needs to be different than the printed title.
@@ -59,7 +70,7 @@
 %
 % Special handling is required in two cases. First, special characters (accents)
 % must be stripped for labels. Second, authors with multiple last names
-% (including 'Jr.' and the like) require a hypen to link those names together.
+% (including 'Jr.' and the like) require a hyphen to link those names together.
 % This is required for proper sorting, which assumes the last word is the last
 % name.
 \newcommand{\booktitle}[3]{\section{\textit{#1} by \hyperref[sec:#2]{#2} (#3)} \label{sec:#1}}
@@ -126,9 +137,9 @@
 
 The list serves to document every book I've ever read, including some that I started but didn't finish. Included with each book is some basic information about the book and what one could loosely define as a ``review''. These reviews sometime comprise my reactions to the book, sometimes contain the plot (including many spoilers!), and sometimes just explain the context around how I came to read the book. This type of information is interesting to probably just about nobody, and the original intended audience for this document was solely and singly myself. At a certain point, though, I realized that a limited number of people may have a passing interest in it, or at least in the scores or the source code. With that in mind, enjoy at your own risk.
 
-There are a few technical details still worth mentioning. First, publication dates listed are usually for the first edition, even if I read a subsequent edition or revision. Second, \hyperref[sec:finished_category]{categorization} is somewhat arbitrary, both in terms of what categories I've listed and what books are listed as what. The \hyperref[category:nonfiction]{nonfiction} and \hyperref[category:novel]{novel} categories are perhaps a bit too all-inclusive, and there is plenty of debate about the line between novels and \hyperref[category:novella]{novellas}. Older works tend to have especially large room for debate as to the ``correct'' categorization. I've used the term ``\hyperref[category:collection]{collection}'' to include both short story collections as well as ``complete works'' compendiums, such as \hyperref[sec:Wolfgang Borchert]{Wolfgang Borchert}'s \textit{\hyperref[sec:Das Gesamtwerk]{Das Gesamtwerk}}, which may include short stories, poetry, essays, and more. In all of these matters, I made a decision simply to make a decision, and I'm not particularly invested in it, so if you want to argue, go right ahead.
+There are a few technical details still worth mentioning. First, publication dates listed are usually for the first edition, even if I read a subsequent edition or revision, unless the version I read was substantially different than the original (e.g.\ \textit{\hyperref[sec:She Bop 2: The Definitive History of Women in Rock, Pop and Soul]{She Bop 2}} and \textit{\hyperref[sec:The C++ Programming Language (4th Edition)]{The C++ Programming Language (4th Edition)}}). Second, \hyperref[sec:finished_category]{categorization} is somewhat arbitrary, both in terms of what categories I've listed and what books are listed as what. The \hyperref[category:nonfiction]{nonfiction} and \hyperref[category:novel]{novel} categories are perhaps a bit too all-inclusive, and there is plenty of debate about the line between novels and \hyperref[category:novella]{novellas}. Older works tend to have especially large room for debate as to the ``correct'' categorization. I've used the term ``\hyperref[category:collection]{collection}'' to include both short story collections as well as ``complete works'' compendiums, such as \hyperref[sec:Wolfgang Borchert]{Wolfgang Borchert}'s \textit{\hyperref[sec:Das Gesamtwerk]{Das Gesamtwerk}}, which may include short stories, poetry, essays, and more. In all of these matters, I made a decision simply to make a decision, and I'm not particularly invested in it, so if you want to argue, go right ahead.
 
-Perhaps the largest opportunity for debate is the matter of nationality. I categorize books by the nation of origin of the author, which usually means where they spent most of their formative years, i.e.\ where they were raised and educated. This gets tricky with some authors, particularly those that split time between \hyperref[nation:England]{England}, \hyperref[nation:USA]{USA}, \hyperref[nation:Canada]{Canada}, or British colonies. For example, I list \hyperref[sec:Neil Young]{Neil Young} as Canadian, as that's where he grew up and where he still holds citizenship, despite that he has lived in California for almost his entire adult life. I list \hyperref[sec:Joseph Conrad]{Joseph Conrad} as \hyperref[nation:Poland]{Polish} and \hyperref[sec:Vladimir Nabokov]{Vladimir Nabokov} as \hyperref[nation:Russia]{Russian}, as those are the countries and cultures they were raised in. I have had extensive debates about the nationality of some authors that wrote in \hyperref[lang:German]{German} and lived in what was then \hyperref[nation:Austria]{Austro-Hungary} but is now an independent nation. This applies to \hyperref[sec:Franz Kafka]{Kafka}, \hyperref[sec:Rainer Maria Rilke]{Rilke}, and \hyperref[sec:Oedoen von Horvath]{Ödön von Horváth}, all of whom I once considered Austrian but have since been convinced otherwise. Works of fiction are categorized by the nation most relevant to the text, if applicable; otherwise by the origin of the author as with fiction. For biographies, I use the nationality of the subject, not the author.
+Perhaps the largest opportunity for debate is the matter of nationality. I categorize books by the nation of origin of the author, which usually means where they spent most of their formative years, i.e.\ where they were raised and educated. This gets tricky with some authors, particularly those that split time between \hyperref[nation:England]{England}, \hyperref[nation:USA]{USA}, \hyperref[nation:Canada]{Canada}, or British colonies. For example, I list \hyperref[sec:Neil Young]{Neil Young} as Canadian, as that's where he grew up and where he still holds citizenship, despite that he has lived in California for almost his entire adult life. I list \hyperref[sec:Joseph Conrad]{Joseph Conrad} as \hyperref[nation:Poland]{Polish} and \hyperref[sec:Vladimir Nabokov]{Vladimir Nabokov} as \hyperref[nation:Russia]{Russian}, as those are the countries and cultures they were raised in. I have had extensive debates about the nationality of some authors that wrote in \hyperref[lang:German]{German} and lived in what was then \hyperref[nation:Austria]{Austria-Hungary} but is now an independent nation. This applies to \hyperref[sec:Franz Kafka]{Kafka}, \hyperref[sec:Rainer Maria Rilke]{Rilke}, and \hyperref[sec:Oedoen von Horvath]{Ödön von Horváth}, all of whom I once considered Austrian but have since been convinced otherwise. Works of \hyperref[category:nonfiction]{nonfiction} are categorized by the nation most relevant to the text, if applicable; otherwise by the origin of the author as with fiction. For biographies, I use the nationality of the subject, not the author.
 
 The last matter is scoring. I use the Goodreads model, which is a five-point scale. 5 means great (I loved it), 4 means really good (I really liked it), 3 means good (I liked it), 2 means okay, and 1 means bad or disappointing. This is distinctly different from the scoring I use on my music review blog (\url{https://metronomicunderground.com/}), which is the letter grade system as explained on the \href{https://metronomicunderground.com/p/about.html}{About} page. I mention this because I have reviewed several \href{https://metronomicunderground.com/search/label/book%20review}{books about music} on the blog, and I had to figure out how to translate that scoring metric into this one. There is some inconsistency, but generally, A+/A = 5, A-/B+ = 4, B/B- = 3, C = 2, and D/F = 1.
 
@@ -139,6 +150,19 @@ The last matter is scoring. I use the Goodreads model, which is a five-point sca
 \tableofcontents \label{sec:toc}
 
 %calc_stats_from_here
+
+
+
+\booktitle{The C++ Programming Language (4th Edition)}{Bjarne Stroustrup}{2013}
+\country{USA}
+\nonfiction
+\dates{2017.07.26}{2018.01.03}
+\score{4}
+\medskip
+
+Technically the author is Danish, but the book was written in the USA in English based on work done in the USA (i.e.\ the author's invention of the language while at Bell Labs). The first edition was published in 1985, but this edition was almost completely rewritten from that. It's an incredibly long and detailed book, almost 1300 pages excluding the index.
+
+Errata and some other additional material are available on his website: \url{http://www.stroustrup.com/4th.html}. My copy had most of the errata already fixed, but there were a few things wrong. Rarely did it matter much. More annoying was that the blue monospace font used for code was sometimes slightly offset from the regular black text.
 
 
 \booktitlelabelauthortwo{Das überzeugende Bewerbungsgespräch für Hochschulabsolventen}{Christian Püttjer & Uwe Schnierda}{2001}{Das ueberzeugende Bewerbungsgespraech fuer Hochschulabsolventen}{Christian Puettjer}{Uwe Schnierda}
@@ -340,7 +364,7 @@ Also known (in Wade-Giles romanization) as the \textit{Tao Te Ching} by Lao-Tzu,
 
 About the Stone Roses album from 1989.
 
-See full review for my music blog (\url{https://metronomicunderground.com/2007/12/alex-green-stone-roses-1989-2006.html}), which I think I wrote because I found the book flawed but still somewhat interestering. Unlike some of the other books in the series, it was neither thoroughly fascinating nor utterly terrible.
+See full review for my music blog (\url{https://metronomicunderground.com/2007/12/alex-green-stone-roses-1989-2006.html}), which I think I wrote because I found the book flawed but still somewhat interesting. Unlike some of the other books in the series, it was neither thoroughly fascinating nor utterly terrible.
 
 
 \booktitle{Pale Fire}{Vladimir Nabokov}{1962}
@@ -378,6 +402,18 @@ See full review for my music blog (\url{https://metronomicunderground.com/2007/1
 \medskip
 
 
+\booktitle{She Bop 2: The Definitive History of Women in Rock, Pop and Soul}{Lucy O'Brien}{2002}
+\country{England}
+\nonfiction
+\dates{2006.01.15}{2006.03.10}
+%\ordering{254}
+\score{4}
+\medskip
+
+
+The author previously published a book titled \textit{She Bop} in 1994, and it's never been clear to me if the book I read is a true sequel or really a revision of the prior work. I suspect the latter.
+
+
 \booktitle{Paradise Lost}{John Milton}{1667}
 \country{England}
 \epicpoem
@@ -395,6 +431,16 @@ See full review for my music blog (\url{https://metronomicunderground.com/2007/1
 %\ordering{216}
 \score{5}
 \medskip
+
+
+\booktitle{The Trial}{Franz Kafka}{1925}
+\country{Czech Republic}
+\translated{German}{Willa and Edwin Muir}
+\finished{2004}
+%\ordering{208}
+\medskip
+
+The original German title is \textit{Der Prozess}.
 
 
 \booktitle{Paradiso}{Dante Alighieri}{1330}
@@ -420,7 +466,17 @@ Definitely the least interesting part of the \textit{Divine Comedy}.
 \score{2}
 \medskip
 
-I think this book was vageuly interesting, but I would never recommend it.
+I think this book was vaguely interesting, but I would never recommend it.
+
+
+\booktitleauthortwo{Inherit the Wind}{Jerome Lawrence & Robert E. Lee}{1955}{Jerome Lawrence}{Robert E. Lee}
+\country{USA}
+\play
+\finished{2003}
+%\ordering{179}
+\medskip
+
+I read this for an English class in high school.
 
 
 \booktitle{Inferno}{Dante Alighieri}{1330}
@@ -434,16 +490,6 @@ I think this book was vageuly interesting, but I would never recommend it.
 \medskip
 
 I read this in full after reading parts of it in high school. I was fascinated by it, and it is a rather interesting read, although quite tedious and antiquated. It's hard to really recommend, but if I did, I would not recommend any of the rest of the \textit{Divine Comedy}. This is the only part that is truly creative and compelling.
-
-
-\booktitle{The Trial}{Franz Kafka}{1925}
-\country{Czech Republic}
-\translated{German}{Willa and Edwin Muir}
-\finished{2004}
-%\ordering{208}
-\medskip
-
-The original German title is \textit{Der Prozess}.
 
 
 \booktitle{Cry, the Beloved Country}{Alan Paton}{1948}
@@ -515,3 +561,5 @@ I remember attempting this book a while after I'd read \textit{\hyperref[sec:The
 
 
 \end{document}
+
+% vim: spell spelllang=en_us
