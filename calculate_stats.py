@@ -158,7 +158,7 @@ def main():
             if books:
                 # Do a bit of work on the author(s) of the previous before starting
                 # the next one. If an extra author line wasn't provided, just use
-                # the entry from the booktitle line. 
+                # the entry from the booktitle line.
                 if not temp_author_sort:
                     temp_author_sort = author
                     temp_author_print = author
@@ -505,6 +505,7 @@ def main():
     pub_1990s = 0
     pub_2000s = 0
     pub_2010s = 0
+    pub_2020s = 0
     countries = dict()
     languages = dict()
     scores = [0] * 6
@@ -558,8 +559,10 @@ def main():
             pub_1990s = pub_1990s + 1
         elif year <= 2010:
             pub_2000s = pub_2000s + 1
-        else:
+        elif year <= 2020:
             pub_2010s = pub_2010s + 1
+        else:
+            pub_2020s = pub_2020s + 1
 
         if book.country in countries:
             countries[book.country] = countries[book.country] + 1
@@ -588,33 +591,33 @@ def main():
 #    print(pub_bce, pub_1_1000, pub_1001_1500, pub_16th, pub_17th, pub_18th,
 #            pub_19th, pub_1900s, pub_1910s, pub_1920s, pub_1930s, pub_1940s,
 #            pub_1950s, pub_1960s, pub_1970s, pub_1980s, pub_1990s, pub_2000s,
-#            pub_2010s)
+#            pub_2010s, pub_2020s)
 
 
     stat_file = open('statistics.tex', 'w')
-    stat_file.write('\\hyperref[sec:pubdate]{Books Read per Publication Year} \dotfill \pageref{sec:pubdate}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:finished_date]{Books Read per Year} \dotfill \pageref{sec:finished_date}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:unfinished_list]{List of Unfinished Books} \dotfill \pageref{sec:unfinished_list}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:rereading_list]{List of Re-read Books} \dotfill \pageref{sec:rereading_list}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:finished_category]{Books Read per Year by Category} \dotfill \pageref{sec:finished_category}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:category_list]{List of Books per Category} \dotfill \pageref{sec:category_list}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:country_table]{Books Read per Country} \dotfill \pageref{sec:country_table}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:country_list]{List of Books per Country} \dotfill \pageref{sec:country_list}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:language_table]{Books Read per Language} \dotfill \pageref{sec:language_table}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:language_list]{List of Books per Language} \dotfill \pageref{sec:language_list}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:score_table]{Books Read per Score} \dotfill \pageref{sec:score_table}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:score_list]{List of Books per Score} \dotfill \pageref{sec:score_list}\n')
+    stat_file.write(r'\hyperref[sec:pubdate]{Books Read per Publication Year} \dotfill \pageref{sec:pubdate}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:finished_date]{Books Read per Year} \dotfill \pageref{sec:finished_date}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:unfinished_list]{List of Unfinished Books} \dotfill \pageref{sec:unfinished_list}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:rereading_list]{List of Re-read Books} \dotfill \pageref{sec:rereading_list}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:finished_category]{Books Read per Year by Category} \dotfill \pageref{sec:finished_category}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:category_list]{List of Books per Category} \dotfill \pageref{sec:category_list}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:country_table]{Books Read per Country} \dotfill \pageref{sec:country_table}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:country_list]{List of Books per Country} \dotfill \pageref{sec:country_list}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:language_table]{Books Read per Language} \dotfill \pageref{sec:language_table}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:language_list]{List of Books per Language} \dotfill \pageref{sec:language_list}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:score_table]{Books Read per Score} \dotfill \pageref{sec:score_table}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:score_list]{List of Books per Score} \dotfill \pageref{sec:score_list}' + '\n')
     for x in reversed(range(6)):
-        stat_file.write('\\\\\\indent\\indent\\hyperref[sec:score' + str(x) + ']')
+        stat_file.write(r'\\\indent\indent\hyperref[sec:score' + str(x) + ']')
         if x == 0:
             stat_file.write('{Unscored}')
         else:
             stat_file.write('{Score of ' + str(x) + '}')
-        stat_file.write(' \dotfill \pageref{sec:score' + str(x) + '}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:series_list]{List of Series} \dotfill \pageref{sec:series_list}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:author_table]{Most Read Authors} \dotfill \pageref{sec:author_table}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:author_list]{List of Authors} \dotfill \pageref{sec:author_list}\n')
-    stat_file.write('\\\\\\indent\\hyperref[sec:duration_list]{List of Books by Duration} \dotfill \pageref{sec:duration_list}\n')
+        stat_file.write(r' \dotfill \pageref{sec:score' + str(x) + '}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:series_list]{List of Series} \dotfill \pageref{sec:series_list}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:author_table]{Most Read Authors} \dotfill \pageref{sec:author_table}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:author_list]{List of Authors} \dotfill \pageref{sec:author_list}' + '\n')
+    stat_file.write(r'\\\indent\hyperref[sec:duration_list]{List of Books by Duration} \dotfill \pageref{sec:duration_list}' + '\n')
     stat_file.write('\n')
 
 
@@ -642,6 +645,7 @@ def main():
     stat_file.write('  1991-2000 & ' + str(pub_1990s) + ' \\\\ \\hline\n')
     stat_file.write('  2001-2010 & ' + str(pub_2000s) + ' \\\\ \\hline\n')
     stat_file.write('  2011-2020 & ' + str(pub_2010s) + ' \\\\ \\hline\n')
+    stat_file.write('  2021-2030 & ' + str(pub_2020s) + ' \\\\ \\hline\n')
     stat_file.write('  total & ' + str(len(books)) + ' \\\\ \\hline\n')
     stat_file.write('\\end{tabular}\n')
 
@@ -650,9 +654,9 @@ def main():
     stat_file.write('\\subsection*{Number of books read per year} \\label{sec:finished_date}\n\n')
     stat_file.write('\\begin{tabular}{|r|l|l|l|l|}\n')
     stat_file.write('  \\hline\n')
-    stat_file.write('  \\textit{year} & \\textit{count} & ' +
-            '\\textit{\hyperref[sec:unfinished_list]{unfinished}} & ' +
-            '\\textit{German} & \\textit{\hyperref[sec:rereading_list]{rereading}} \\\\ \\hline\n')
+    stat_file.write(r'  \textit{year} & \textit{count} & ' +
+            r'\textit{\hyperref[sec:unfinished_list]{unfinished}} & ' +
+            r'\textit{German} & \textit{\hyperref[sec:rereading_list]{rereading}} \\ \hline' + '\n')
     for x in range(num_years_read):
         if x == 0:
             stat_file.write('  Unknown')
@@ -686,30 +690,30 @@ def main():
     stat_file.write('\\subsection*{Type of books read per year} \\label{sec:finished_category}\n\n')
     stat_file.write('\\begin{tabular}{|r|l|l|l|l|l|l|l|l|l|}\n')
     stat_file.write('  \\hline\n')
-    stat_file.write('  \\textit{year} & \\textit{\hyperref[category:nonfiction]{nonfiction}} & ' +
-            '\\textit{\hyperref[category:collection]{collection}} & ' +
-            '\\textit{\hyperref[category:novella]{novella}} & ' +
-            '\\textit{\hyperref[category:shortstory]{short}} & ' +
-            '\\textit{\hyperref[category:play]{play}} & ' +
-            '\\textit{\hyperref[category:epicpoem]{epic}} & ' +
-            '\\textit{\hyperref[category:poetry]{poetry}} & ' +
-            '\\textit{\hyperref[category:graphicnovel]{graphic}} & ' +
-            '\\textit{\hyperref[category:novel]{novel}} \\\\ \\hline\n')
+    stat_file.write(r'  \textit{year} & \textit{\hyperref[category:nonfiction]{nonfiction}} & ' +
+            r'\textit{\hyperref[category:collection]{collection}} & ' +
+            r'\textit{\hyperref[category:novella]{novella}} & ' +
+            r'\textit{\hyperref[category:shortstory]{short}} & ' +
+            r'\textit{\hyperref[category:play]{play}} & ' +
+            r'\textit{\hyperref[category:epicpoem]{epic}} & ' +
+            r'\textit{\hyperref[category:poetry]{poetry}} & ' +
+            r'\textit{\hyperref[category:graphicnovel]{graphic}} & ' +
+            r'\textit{\hyperref[category:novel]{novel}} \\ \hline' + '\n')
     for x in range(num_years_read):
         if x == 0:
             stat_file.write('  Unknown')
         else:
             stat_file.write('  ' + str(min_year_read + x - 1))
-        stat_file.write(' & ' + str(nonfiction_by_year[x]) + ' & ' + 
-                str(collections_by_year[x]) + ' & ' + str(novellas_by_year[x]) + ' & ' + 
-                str(shorts_by_year[x]) + ' & ' + str(plays_by_year[x]) + ' & ' + 
-                str(epics_by_year[x]) + ' & ' + str(poetry_by_year[x]) + ' & ' + 
+        stat_file.write(' & ' + str(nonfiction_by_year[x]) + ' & ' +
+                str(collections_by_year[x]) + ' & ' + str(novellas_by_year[x]) + ' & ' +
+                str(shorts_by_year[x]) + ' & ' + str(plays_by_year[x]) + ' & ' +
+                str(epics_by_year[x]) + ' & ' + str(poetry_by_year[x]) + ' & ' +
                 str(graphic_by_year[x]) + ' & ' + str(novels_by_year[x]) + ' \\\\ \\hline\n')
     # Print totals of all years.
-    stat_file.write('  total & ' + str(sum(nonfiction_by_year)) + ' & ' + 
-            str(sum(collections_by_year)) + ' & ' + str(sum(novellas_by_year)) + ' & ' + 
-            str(sum(shorts_by_year)) + ' & ' + str(sum(plays_by_year)) + ' & ' + 
-            str(sum(epics_by_year)) + ' & ' + str(sum(poetry_by_year)) + ' & ' + 
+    stat_file.write('  total & ' + str(sum(nonfiction_by_year)) + ' & ' +
+            str(sum(collections_by_year)) + ' & ' + str(sum(novellas_by_year)) + ' & ' +
+            str(sum(shorts_by_year)) + ' & ' + str(sum(plays_by_year)) + ' & ' +
+            str(sum(epics_by_year)) + ' & ' + str(sum(poetry_by_year)) + ' & ' +
             str(sum(graphic_by_year)) + ' & ' + str(sum(novels_by_year)) + ' \\\\ \\hline\n')
     stat_file.write('\\end{tabular}\n')
 
@@ -821,7 +825,7 @@ def main():
         for book in series_books:
             title = re.sub(r' & ', r' \& ', book.title)
             author = re.sub(r' & ', r' \& ', book.print_author)
-            stat_file.write(str(counter) + '. \\textit{\\hyperref[sec:' + book.reftitle + ']{' + title + '}} (\#' + str(book.series_index) + ') by ' + author + ' (' + book.print_year + ')\n\n')
+            stat_file.write(str(counter) + r'. \textit{\hyperref[sec:' + book.reftitle + ']{' + title + r'}} (\#' + str(book.series_index) + ') by ' + author + ' (' + book.print_year + ')' + '\n\n')
             counter = counter + 1
 
 
@@ -869,11 +873,11 @@ def main():
 def parse_authors(authors, author_sort, author_print):
     # Parse the author strings and add to the author list if not there.
     # Returns the individual authors.
-    
+
     # Expect each author (in both _sort and _print) to be separated by a single
     # ampersand (and spaces). An escape character (\) is unnecessary. Split
     # based on the &.
-    
+
     authors_sort = author_sort.split('&')
     authors_print = author_print.split('&')
     # Remove leading and trailing whitespace from each author name.
