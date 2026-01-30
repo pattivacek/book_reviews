@@ -8,9 +8,6 @@ import datetime
 
 # TODO:
 #
-# Figure out how to get a multiline table working for most read author list.
-# See the appropriate section for some clues.
-#
 # Remove articles (The) from series list for sorting purposes.
 #
 # Review German-language authors for nationality: Joseph Roth???
@@ -688,6 +685,7 @@ def main():
 
     # Books read by year, broken down by category.
     stat_file.write('\\subsection*{Type of books read per year} \\label{sec:finished_category}\n\n')
+    stat_file.write('{\\small\n')  # Reduce font size for wide table
     stat_file.write('\\begin{tabular}{|r|l|l|l|l|l|l|l|l|l|}\n')
     stat_file.write('  \\hline\n')
     stat_file.write(r'  \textit{year} & \textit{\hyperref[category:nonfiction]{nonfiction}} & ' +
@@ -716,6 +714,7 @@ def main():
             str(sum(epics_by_year)) + ' & ' + str(sum(poetry_by_year)) + ' & ' +
             str(sum(graphic_by_year)) + ' & ' + str(sum(novels_by_year)) + ' \\\\ \\hline\n')
     stat_file.write('\\end{tabular}\n')
+    stat_file.write('}\\normalsize\n')  # Restore normal font size
 
     categories = ['Nonfiction', 'Collection', 'Novella', 'Short Story', 'Play', 'Epic Poem', 'Poetry', 'Graphic Novel', 'Novel']
     fields = ['nonfiction', 'collection', 'novella', 'shortstory', 'play', 'epicpoem', 'poetry', 'graphicnovel', 'novel']
@@ -829,19 +828,22 @@ def main():
             counter = counter + 1
 
 
-    # Most read authors
+    # Most read authors (using longtable to allow multi-page tables)
     stat_file.write('\\subsection*{Most read authors} \\label{sec:author_table}\n\n')
-    stat_file.write('\\begin{tabular}{|r|l|}\n')
+    stat_file.write('\\begin{longtable}{|r|l|}\n')
     stat_file.write('  \\hline\n')
     stat_file.write('  \\textit{author} & \\textit{count} \\\\ \\hline\n')
+    stat_file.write('  \\endfirsthead\n')  # End of first page header
+    stat_file.write('  \\hline\n')
+    stat_file.write('  \\textit{author} & \\textit{count} \\\\ \\hline\n')
+    stat_file.write('  \\endhead\n')  # Header repeated on subsequent pages
+    stat_file.write('  \\hline\n')
+    stat_file.write('  \\endfoot\n')  # Footer on each page except last
     for author in sorted(authors, key=lambda x:len(x.books), reverse=True):
-        # Only list authors with more than two books read. This is more or less
-        # to prevent a table that is larger than one page. If it is ever
-        # desirable to have a multi-page table, look into the longtable or xtab
-        # packages.
+        # List authors with more than two books read.
         if len(author.books) > 2:
             stat_file.write('  \\hyperref[sec:' + author.label_name + ']{' + author.print_name + '} & ' + str(len(author.books)) + ' \\\\ \\hline\n')
-    stat_file.write('\\end{tabular}\n')
+    stat_file.write('\\end{longtable}\n')
 
     # List of books by author (sorted by publication year)
     stat_file.write('\\subsection*{Books listed by author} \\label{sec:author_list}\n\n')
