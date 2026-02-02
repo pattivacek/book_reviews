@@ -8,8 +8,6 @@ import datetime
 
 # TODO:
 #
-# Remove articles (The) from series list for sorting purposes.
-#
 # Review German-language authors for nationality: Joseph Roth???
 
 class Book:
@@ -816,8 +814,7 @@ def main():
 
     # List of series
     stat_file.write('\\subsection*{List of series} \\label{sec:series_list}\n\n')
-    # Is there an easy way to ignore 'The' when sorting?
-    for series in sorted(series_dict):
+    for series in sorted(series_dict, key=lambda s: re.sub(r'^(The|A|An|Der|Die|Das|Ein|Eine) ', '', s)):
         stat_file.write('\\subsubsection*{' + series + '} \\label{series:' + series + '}\n\n')
         counter = 1
         series_books = sorted((book for book in books if book.series == series), key=operator.attrgetter('series_index'))
