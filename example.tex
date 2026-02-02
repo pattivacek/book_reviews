@@ -3,11 +3,24 @@
 \usepackage[margin=1in]{geometry} % Force 1-inch margins on all sides
 \usepackage{indentfirst} % Force indenting first paragraph of each section
 \usepackage{verbatim} % For multi-line/block comments
+\usepackage{longtable} % For tables that span multiple pages
 \usepackage[ngerman]{babel}
 
-\usepackage{sectsty} % Allow resizing section font size
-\sectionfont{\fontsize{14}{8}\selectfont} % Reduce section font size
-% \usepackage{microtype} % may help with overfull hbox, but in practice doesn't really do much
+% Customize section font size (replaces sectsty to avoid underbar/underline warnings)
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+  {-3.5ex \@plus -1ex \@minus -.2ex}%
+  {2.3ex \@plus.2ex}%
+  {\normalfont\fontsize{14}{16}\selectfont\bfseries}}
+\makeatother
+
+\usepackage{microtype} % Helps with overfull hbox by enabling character protrusion and font expansion
+
+% Global settings to reduce overfull/underfull hbox warnings
+\tolerance=1000 % Allow looser line breaking to avoid overfull hbox
+\emergencystretch=3em % Extra stretch for emergency line breaking
+\hfuzz=2pt % Ignore overfull hbox warnings smaller than 2pt
+\hbadness=10000 % Suppress underfull hbox warnings
 
 \PassOptionsToPackage{hyphens}{url}\usepackage{hyperref} % Make all cross-references into hyperlinks, and allow line breaking on hyphens
 \pdfstringdefDisableCommands{
@@ -23,21 +36,25 @@
 
 %\usepackage[T1]{fontenc} % Correct printing of special characters. Seems to mess up copying text, though.
 \usepackage[utf8]{inputenc} % Allow direct input of 8-byte special characters such as umlauts.
-%\usepackage{lmodern} % Use this if available, or try installing cm-super to get pdf copying to work correctly.
+\usepackage{lmodern} % Required for microtype font expansion; also improves PDF text copying
 
 % For Chinese characters used for the Dao De Jing...
-% See http://tex.stackexchange.com/questions/17611/how-does-one-type-chinese-in-latex
+% See https://tex.stackexchange.com/questions/17611/how-does-one-type-chinese-in-latex
 %\usepackage{CJKutf8}
 %\AtBeginDvi{\input{zhwinfonts}}
 
 
 % This block configures table of contents sizing. Main purpose is to better
 % handle spacing between numbers and titles, but I also like the fact that it
-% resizes the text smaller.
+% resizes the text smaller. Also enables sloppy mode for TOC to avoid overfull
+% hbox warnings from long book titles.
 \makeatletter
 \renewcommand{\l@section}{\@dottedtocline{1}{1.5em}{2.6em}}
 \renewcommand{\l@subsection}{\@dottedtocline{2}{4.0em}{3.6em}}
 \renewcommand{\l@subsubsection}{\@dottedtocline{3}{7.4em}{4.5em}}
+% Wrap tableofcontents to use sloppy mode for better line breaking
+\let\oldtableofcontents\tableofcontents
+\renewcommand{\tableofcontents}{{\sloppy\oldtableofcontents}}
 \makeatother
 
 
@@ -98,19 +115,21 @@
 \newcommand{\published}[2]{\\\textsc{Originally published between #1 and #2}}
 
 % Then list series/sequel information.
-\newcommand{\series}[3]{\\\textsc{Part #2 of #3 of the \textit{\hyperref[series:#1]{#1}} series}}
-\newcommand{\seriesunlimited}[2]{\\\textsc{Book #2 of the \textit{\hyperref[series:#1]{#1}} series}}
-\newcommand{\sequel}[1]{\\\textsc{Sequel to \textit{\hyperref[sec:#1]{#1}}}}
+% Note: \textit must be outside \textsc to avoid "italic small caps" font warnings.
+\newcommand{\series}[3]{\\\textsc{Part #2 of #3 of the} \textit{\hyperref[series:#1]{#1}} \textsc{series}}
+\newcommand{\seriesunlimited}[2]{\\\textsc{Book #2 of the} \textit{\hyperref[series:#1]{#1}} \textsc{series}}
+\newcommand{\sequel}[1]{\\\textsc{Sequel to} \textit{\hyperref[sec:#1]{#1}}}
 
 % Then list information about my experience reading it, i.e. language and dates.
 % Re-readings can have multiple, seemingly redundant/conflicting items.
-\newcommand{\german}[1]{\\\textsc{Read in \hyperref[lang:German]{German}; known in English as \textit{#1}}}
+\newcommand{\german}[1]{\\\textsc{Read in \hyperref[lang:German]{German}; known in English as} \textit{#1}}
 \newcommand{\germansame}[0]{\\\textsc{Read in \hyperref[lang:German]{German}}}
 \newcommand{\translated}[2]{\\\textsc{Translated from \hyperref[lang:#1]{#1} by #2}}
 \newcommand{\dates}[2]{\\\textsc{Started: #1; Finished: #2}}
 %\newcommand{\datesapprox}[2]{\\\textsc{Started: #1 (approximately); Finished: #2}} % Unused at present
 \newcommand{\finished}[1]{\\\textsc{Finished: #1}}
 \newcommand{\unfinished}[1]{\\\textsc{Started: #1; \hyperref[sec:unfinished_list]{Unfinished}}}
+\newcommand{\unfinisheddate}[2]{\\\textsc{Started: #1; \hyperref[sec:unfinished_list]{Unfinished}; Abandoned #2}}
 \newcommand{\uncertain}[0]{\\\textsc{Dates read uncertain}}
 \newcommand{\unknown}[0]{\\\textsc{Dates read and ordering unknown}}
 \newcommand{\unknownunfinished}[0]{\\\textsc{Dates read and ordering unknown; \hyperref[sec:unfinished_list]{unfinished}}}
