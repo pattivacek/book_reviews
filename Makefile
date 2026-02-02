@@ -1,4 +1,4 @@
-.PHONY: all toc stats clean_pdf clean force
+.PHONY: all toc clean_pdf clean force
 
 TEX = pdflatex -halt-on-error -file-line-error
 
@@ -12,9 +12,8 @@ all: $(DOC_NAME).pdf
 
 toc: clean_pdf all
 
-#stats: statistics.tex
-stats: calculate_stats.py
-	$(PYTHON) $<
+statistics.tex: book_reviews.tex calculate_stats.py
+	$(PYTHON) calculate_stats.py
 
 clean_pdf:
 	rm -f $(DOC_NAME).pdf
@@ -22,8 +21,6 @@ clean_pdf:
 clean: clean_pdf
 	rm -f $(DOC_NAME).aux $(DOC_NAME).log $(DOC_NAME).out $(DOC_NAME).toc booklist.csv statistics.tex *~
 
-%.pdf: %.tex stats
+%.pdf: %.tex statistics.tex
 	$(TEX) $<
 
-#statistics.tex: calculate_stats.py
-#	$(PYTHON) $<
