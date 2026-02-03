@@ -4,6 +4,7 @@ import csv
 import datetime
 import operator
 import re
+from pathlib import Path
 
 
 
@@ -134,7 +135,7 @@ class Author:
 
 
 def main():
-    file = open("book_reviews.tex")
+    file = Path("book_reviews.tex").open()
     init = False
     books = []
     readings = []
@@ -191,11 +192,8 @@ def main():
             title = title_line[1][:-1]
             author = title_line[2][:-1]
             year = title_line[3][:-1]
-            if re.search(r"\\booktitlelabel", line):
-                # Also matches booktitlelabelauthor snf booktitlelabelauthortwo.
-                reftitle = title_line[4][:-1]
-            else:
-                reftitle = title
+            # Also matches booktitlelabelauthor and booktitlelabelauthortwo.
+            reftitle = title_line[4][:-1] if re.search(r"\\booktitlelabel", line) else title
             if re.search(r"\\booktitleauthortwo", line):
                 # Assume these author names are safe for labels for now.
                 temp_author_sort = title_line[4][:-1] + " & " + title_line[5][:-1]
@@ -332,14 +330,8 @@ def main():
             new_reading = True
         elif re.search(r"\\uncertain", line) or re.search(r"\\unknown", line):
             dates = (0, 0)
-            if re.search(r"\\unknownunfinished", line):
-                unfinished = True
-            else:
-                unfinished = False
-            if re.search(r"\\unknown", line):
-                unknown = True
-            else:
-                unknown = False
+            unfinished = bool(re.search(r"\\unknownunfinished", line))
+            unknown = bool(re.search(r"\\unknown", line))
             reading = Reading(
                 book,
                 dates,
@@ -377,11 +369,11 @@ def main():
 
     readings = sorted(readings, reverse=True)
 
-    this_year = datetime.datetime.now().year
+    this_year = datetime.datetime.now(tz=datetime.UTC).year
     min_year_read = this_year
 
     # Print csv file to mimic the original spreadsheet.
-    csvfile = open("booklist.csv", "w", newline="", encoding="utf-8")
+    csvfile = Path("booklist.csv").open("w", newline="", encoding="utf-8")
     csv_out = csv.writer(csvfile, "excel")
     # Write out header row.
     csv_out.writerow(
@@ -442,52 +434,19 @@ def main():
 
         print_year = re.sub(r"([0-9]*) B\.C\.E\.", r"-\1", str(reading.book.year))
 
-        if reading.book.score <= 0:
-            print_score = ""
-        else:
-            print_score = reading.book.score
+        print_score = "" if reading.book.score <= 0 else reading.book.score
 
-        if reading.german:
-            print_german = "Y"
-        else:
-            print_german = ""
-        if reading.book.nonfiction:
-            print_nonfiction = "Y"
-        else:
-            print_nonfiction = ""
-        if reading.book.novella:
-            print_novella = "Y"
-        else:
-            print_novella = ""
-        if reading.book.collection:
-            print_collection = "Y"
-        else:
-            print_collection = ""
-        if reading.book.shortstory:
-            print_shortstory = "Y"
-        else:
-            print_shortstory = ""
-        if reading.book.play:
-            print_play = "Y"
-        else:
-            print_play = ""
-        if reading.book.epicpoem:
-            print_epicpoem = "Y"
-        else:
-            print_epicpoem = ""
-        if reading.book.poetry:
-            print_poetry = "Y"
-        else:
-            print_poetry = ""
-        if reading.book.graphicnovel:
-            print_graphicnovel = "Y"
-        else:
-            print_graphicnovel = ""
+        print_german = "Y" if reading.german else ""
+        print_nonfiction = "Y" if reading.book.nonfiction else ""
+        print_novella = "Y" if reading.book.novella else ""
+        print_collection = "Y" if reading.book.collection else ""
+        print_shortstory = "Y" if reading.book.shortstory else ""
+        print_play = "Y" if reading.book.play else ""
+        print_epicpoem = "Y" if reading.book.epicpoem else ""
+        print_poetry = "Y" if reading.book.poetry else ""
+        print_graphicnovel = "Y" if reading.book.graphicnovel else ""
 
-        if len(reading.book.reading) > 1:
-            print_read_num = reading.read_num
-        else:
-            print_read_num = ""
+        print_read_num = reading.read_num if len(reading.book.reading) > 1 else ""
 
         csv_out.writerow(
             [
@@ -533,10 +492,7 @@ def main():
 
     # Re-iterate through readings to calculate number of books read per year.
     for reading in readings:
-        if reading.year_read == 0:
-            temp_year = 0
-        else:
-            temp_year = reading.year_read - min_year_read + 1
+        temp_year = 0 if reading.year_read == 0 else reading.year_read - min_year_read + 1
         finished_by_year[temp_year] = finished_by_year[temp_year] + 1
         if reading.unfinished:
             unfinished_by_year[temp_year] = unfinished_by_year[temp_year] + 1
@@ -671,7 +627,7 @@ def main():
     #       pub_1950s, pub_1960s, pub_1970s, pub_1980s, pub_1990s, pub_2000s,
     #       pub_2010s, pub_2020s)
 
-    stat_file = open("statistics.tex", "w")
+    stat_file = Path("statistics.tex").open("w")
     stat_file.write(r"\hyperref[sec:pubdate]{Books Read per Publication Year} \dotfill \pageref{sec:pubdate}" + "\n")
     stat_file.write(
         r"\\\indent\hyperref[sec:finished_date]{Books Read per Year} \dotfill \pageref{sec:finished_date}" + "\n"
@@ -952,13 +908,10 @@ def main():
     stat_file.write("\\begin{tabular}{|r|l|}\n")
     stat_file.write("  \\hline\n")
     stat_file.write("  \\textit{nation} & \\textit{count} \\\\ \\hline\n")
-    for nation in sorted(countries):
-        # if nation == 'USA' or nation == 'England':
-        #     stat_file.write('  ' + nation + ' & ' + str(countries[nation]) + ' \\\\ \\hline\n')
-        # else:
-        stat_file.write(
-            "  \\hyperref[nation:" + nation + "]{" + nation + "} & " + str(countries[nation]) + " \\\\ \\hline\n"
-        )
+    stat_file.writelines(
+        "  \\hyperref[nation:" + nation + "]{" + nation + "} & " + str(countries[nation]) + " \\\\ \\hline\n"
+        for nation in sorted(countries)
+    )
     stat_file.write("\\end{tabular}\n")
 
     # List of books per country
