@@ -41,11 +41,12 @@ class Book:
         self.score = 0
 
 
-class Reading:
+class Reading:  # noqa: PLW1641
     """A record of a specific reading of a book"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
+        *,
         book: Book,
         dates: tuple[str, str],
         german: bool,
@@ -89,7 +90,7 @@ class Reading:
         else:
             self.duration = datetime.timedelta(0)
 
-    def read_cmp(self, other: "Reading") -> int:
+    def read_cmp(self, other: "Reading") -> int:  # noqa: PLR0911
         # If no explicit ordering was provided for both readings, use date
         # structs. (Python3 does not make relying on the date strings feasible.)
         # If the book was unfinished, just use the start date; this is
@@ -148,7 +149,7 @@ class Author:
         self.books: list[Book] = []  # list of Book records (written by this author)
 
 
-def main() -> None:
+def main() -> None:  # noqa: C901, PLR0912, PLR0915
     init = False
     books: list[Book] = []
     readings: list[Reading] = []
@@ -295,69 +296,61 @@ def main() -> None:
             elif re.search(r"\\dates", line):
                 date_line = line[:-1].split("{")
                 dates = (date_line[1][:-1], date_line[2][:-1])
-                unfinished = False
-                unknown = False
                 reading = Reading(
-                    book,
-                    dates,
-                    temp_german,
-                    temp_german_trans,
-                    temp_translated,
-                    temp_translator,
-                    unfinished,
-                    unknown,
-                    len(book.reading) + 1,
+                    book=book,
+                    dates=dates,
+                    german=temp_german,
+                    german_trans=temp_german_trans,
+                    translated=temp_translated,
+                    translator=temp_translator,
+                    unfinished=False,
+                    unknown=False,
+                    read_num=len(book.reading) + 1,
                 )
                 book.reading.append(reading)
                 new_reading = True
             elif re.search(r"\\finished", line):
                 dates = (0, line[:-1].split("{")[1][:-1])
-                unfinished = False
-                unknown = False
                 reading = Reading(
-                    book,
-                    dates,
-                    temp_german,
-                    temp_german_trans,
-                    temp_translated,
-                    temp_translator,
-                    unfinished,
-                    unknown,
-                    len(book.reading) + 1,
+                    book=book,
+                    dates=dates,
+                    german=temp_german,
+                    german_trans=temp_german_trans,
+                    translated=temp_translated,
+                    translator=temp_translator,
+                    unfinished=False,
+                    unknown=False,
+                    read_num=len(book.reading) + 1,
                 )
                 book.reading.append(reading)
                 new_reading = True
             elif re.search(r"\\unfinished", line):
                 dates = (line[:-1].split("{")[1][:-1], 0)
-                unfinished = True
-                unknown = False
                 reading = Reading(
-                    book,
-                    dates,
-                    temp_german,
-                    temp_german_trans,
-                    temp_translated,
-                    temp_translator,
-                    unfinished,
-                    unknown,
-                    len(book.reading) + 1,
+                    book=book,
+                    dates=dates,
+                    german=temp_german,
+                    german_trans=temp_german_trans,
+                    translated=temp_translated,
+                    translator=temp_translator,
+                    unfinished=True,
+                    unknown=False,
+                    read_num=len(book.reading) + 1,
                 )
                 book.reading.append(reading)
                 new_reading = True
             elif re.search(r"\\uncertain", line) or re.search(r"\\unknown", line):
                 dates = (0, 0)
-                unfinished = bool(re.search(r"\\unknownunfinished", line))
-                unknown = bool(re.search(r"\\unknown", line))
                 reading = Reading(
-                    book,
-                    dates,
-                    temp_german,
-                    temp_german_trans,
-                    temp_translated,
-                    temp_translator,
-                    unfinished,
-                    unknown,
-                    len(book.reading) + 1,
+                    book=book,
+                    dates=dates,
+                    german=temp_german,
+                    german_trans=temp_german_trans,
+                    translated=temp_translated,
+                    translator=temp_translator,
+                    unfinished=bool(re.search(r"\\unknownunfinished", line)),
+                    unknown=bool(re.search(r"\\unknown", line)),
+                    read_num=len(book.reading) + 1,
                 )
                 book.reading.append(reading)
                 new_reading = True
@@ -642,7 +635,9 @@ def main() -> None:
     #       pub_2010s, pub_2020s)
 
     with Path("statistics.tex").open("w") as stat_file:
-        stat_file.write(r"\hyperref[sec:pubdate]{Books Read per Publication Year} \dotfill \pageref{sec:pubdate}" + "\n")
+        stat_file.write(
+            r"\hyperref[sec:pubdate]{Books Read per Publication Year} \dotfill \pageref{sec:pubdate}" + "\n"
+        )
         stat_file.write(
             r"\\\indent\hyperref[sec:finished_date]{Books Read per Year} \dotfill \pageref{sec:finished_date}" + "\n"
         )
@@ -651,26 +646,31 @@ def main() -> None:
             + "\n"
         )
         stat_file.write(
-            r"\\\indent\hyperref[sec:rereading_list]{List of Re-read Books} \dotfill \pageref{sec:rereading_list}" + "\n"
+            r"\\\indent\hyperref[sec:rereading_list]{List of Re-read Books} \dotfill \pageref{sec:rereading_list}"
+            + "\n"
         )
         stat_file.write(
             r"\\\indent\hyperref[sec:finished_category]{Books Read per Year by Category} \dotfill \pageref{sec:finished_category}"
             + "\n"
         )
         stat_file.write(
-            r"\\\indent\hyperref[sec:category_list]{List of Books per Category} \dotfill \pageref{sec:category_list}" + "\n"
+            r"\\\indent\hyperref[sec:category_list]{List of Books per Category} \dotfill \pageref{sec:category_list}"
+            + "\n"
         )
         stat_file.write(
             r"\\\indent\hyperref[sec:country_table]{Books Read per Country} \dotfill \pageref{sec:country_table}" + "\n"
         )
         stat_file.write(
-            r"\\\indent\hyperref[sec:country_list]{List of Books per Country} \dotfill \pageref{sec:country_list}" + "\n"
+            r"\\\indent\hyperref[sec:country_list]{List of Books per Country} \dotfill \pageref{sec:country_list}"
+            + "\n"
         )
         stat_file.write(
-            r"\\\indent\hyperref[sec:language_table]{Books Read per Language} \dotfill \pageref{sec:language_table}" + "\n"
+            r"\\\indent\hyperref[sec:language_table]{Books Read per Language} \dotfill \pageref{sec:language_table}"
+            + "\n"
         )
         stat_file.write(
-            r"\\\indent\hyperref[sec:language_list]{List of Books per Language} \dotfill \pageref{sec:language_list}" + "\n"
+            r"\\\indent\hyperref[sec:language_list]{List of Books per Language} \dotfill \pageref{sec:language_list}"
+            + "\n"
         )
         stat_file.write(
             r"\\\indent\hyperref[sec:score_table]{Books Read per Score} \dotfill \pageref{sec:score_table}" + "\n"
@@ -685,13 +685,18 @@ def main() -> None:
             else:
                 stat_file.write("{Score of " + str(x) + "}")
             stat_file.write(r" \dotfill \pageref{sec:score" + str(x) + "}" + "\n")
-        stat_file.write(r"\\\indent\hyperref[sec:series_list]{List of Series} \dotfill \pageref{sec:series_list}" + "\n")
+        stat_file.write(
+            r"\\\indent\hyperref[sec:series_list]{List of Series} \dotfill \pageref{sec:series_list}" + "\n"
+        )
         stat_file.write(
             r"\\\indent\hyperref[sec:author_table]{Most Read Authors} \dotfill \pageref{sec:author_table}" + "\n"
         )
-        stat_file.write(r"\\\indent\hyperref[sec:author_list]{List of Authors} \dotfill \pageref{sec:author_list}" + "\n")
         stat_file.write(
-            r"\\\indent\hyperref[sec:duration_list]{List of Books by Duration} \dotfill \pageref{sec:duration_list}" + "\n"
+            r"\\\indent\hyperref[sec:author_list]{List of Authors} \dotfill \pageref{sec:author_list}" + "\n"
+        )
+        stat_file.write(
+            r"\\\indent\hyperref[sec:duration_list]{List of Books by Duration} \dotfill \pageref{sec:duration_list}"
+            + "\n"
         )
         stat_file.write("\n")
 
@@ -918,7 +923,9 @@ def main() -> None:
                 counter = counter + 1
 
         # Number of books per country
-        stat_file.write("\\subsection*{Books read per nation of origin of author/subject} \\label{sec:country_table}\n\n")
+        stat_file.write(
+            "\\subsection*{Books read per nation of origin of author/subject} \\label{sec:country_table}\n\n"
+        )
         stat_file.write("\\begin{tabular}{|r|l|}\n")
         stat_file.write("  \\hline\n")
         stat_file.write("  \\textit{nation} & \\textit{count} \\\\ \\hline\n")
