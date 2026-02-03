@@ -147,6 +147,8 @@ def main():
     temp_german_trans = ""
     temp_translated = False
     temp_translator = ""
+    book = None
+    author = ""
 
     for line in file:
         if re.search(r"calc_stats_from_here", line):
@@ -362,9 +364,7 @@ def main():
             new_reading = False
 
     print("Number of books read: ", len(books))
-    for book in books:
-        for reading in book.reading:
-            readings.append(reading)
+    readings = [reading for book in books for reading in book.reading]
     print("Number including rereadings: ", len(readings))
 
     readings = sorted(readings, reverse=True)
@@ -540,10 +540,10 @@ def main():
     pub_2000s = 0
     pub_2010s = 0
     pub_2020s = 0
-    countries = dict()
-    languages = dict()
+    countries = {}
+    languages = {}
     scores = [0] * 6
-    series_dict = dict()
+    series_dict = {}
     # authors = dict()
 
     for book in books:
