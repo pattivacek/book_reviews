@@ -11,14 +11,15 @@ from pathlib import Path
 class Book:
     """A description of a book"""
 
-    def __init__(self, title, print_author, year, reftitle):
+    def __init__(self, title: str, print_author: str, year: str, reftitle: str) -> None:
         self.title = title
         self.print_author = print_author
         self.print_year = year
         # Turn BCE into a negative number.
+        year_num = year
         if re.search(r"B\.C\.E\.", year):
-            year = re.sub(r"([0-9]*) B\.C\.E\.", r"-\1", year)
-        self.year = int(year)
+            year_num = re.sub(r"([0-9]*) B\.C\.E\.", r"-\1", year)
+        self.year = int(year_num)
         self.reftitle = reftitle
         self.country = ""
         self.novel = False  # derived in post-processing
@@ -35,15 +36,26 @@ class Book:
         self.series_index = 0
         self.sequel_of = ""
         self.language = "English"  # original language
-        self.authors = []  # list of Author records
-        self.reading = []  # list of Reading records
+        self.authors: list[Author] = []  # list of Author records
+        self.reading: list[Reading] = []  # list of Reading records
         self.score = 0
 
 
 class Reading:
     """A record of a specific reading of a book"""
 
-    def __init__(self, book, dates, german, german_trans, translated, translator, unfinished, unknown, read_num):
+    def __init__(
+        self,
+        book: Book,
+        dates: tuple[str, str],
+        german: bool,
+        german_trans: str,
+        translated: bool,
+        translator: str,
+        unfinished: bool,
+        unknown: bool,
+        read_num: int,
+    ) -> None:
         self.book = book  # the associated Book record
         self.date_strs = dates  # (start, finish), use zeros for unknown/uncertain/unfinished
         self.german = german
@@ -59,25 +71,25 @@ class Reading:
         self.ordering = 0
         self.year_read = 0  # Derived in post-processing
         # Construct date structs for comparison purposes.
-        self.dates = []
-        for date in dates:
-            if date == 0:
-                date = datetime.date(1, 1, 1)
+        self.dates: list[datetime.date] = []
+        for date_str in dates:
+            if date_str == 0:
+                parsed_date = datetime.date(1, 1, 1)
             else:
-                dateparts = str(date).split(".")
+                dateparts = str(date_str).split(".")
                 if len(dateparts) == 1:
-                    date = datetime.date(int(dateparts[0]), 1, 1)
+                    parsed_date = datetime.date(int(dateparts[0]), 1, 1)
                 elif len(dateparts) == 2:
-                    date = datetime.date(int(dateparts[0]), int(dateparts[1]), 1)
+                    parsed_date = datetime.date(int(dateparts[0]), int(dateparts[1]), 1)
                 else:
-                    date = datetime.date(int(dateparts[0]), int(dateparts[1]), int(dateparts[2]))
-            self.dates.append(date)
+                    parsed_date = datetime.date(int(dateparts[0]), int(dateparts[1]), int(dateparts[2]))
+            self.dates.append(parsed_date)
         if len(self.dates) == 2:
             self.duration = self.dates[1] - self.dates[0]
         else:
-            self.duration = []
+            self.duration = datetime.timedelta(0)
 
-    def read_cmp(self, other):
+    def read_cmp(self, other: "Reading") -> int:
         # If no explicit ordering was provided for both readings, use date
         # structs. (Python3 does not make relying on the date strings feasible.)
         # If the book was unfinished, just use the start date; this is
@@ -99,23 +111,25 @@ class Reading:
         return 0
 
     # Support both python2 and python3, albeit rather inefficiently.
-    def __cmp__(self, other):
+    def __cmp__(self, other: "Reading") -> int:
         return self.read_cmp(other)
 
-    def __lt__(self, other):
+    def __lt__(self, other: "Reading") -> bool:
         return self.read_cmp(other) < 0
 
-    def __gt__(self, other):
+    def __gt__(self, other: "Reading") -> bool:
         return self.read_cmp(other) > 0
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Reading):
+            return NotImplemented
         return self.read_cmp(other) == 0
 
 
 class Author:
     """A description of a single author"""
 
-    def __init__(self, sort_name, print_name):
+    def __init__(self, sort_name: str, print_name: str) -> None:
         # Underscores should be used in sort_name to connect multi-word last
         # names. Assume that the last word of the name is the complete last name
         # and rearrange accordingly. If there are no spaces, treat the whole
@@ -131,15 +145,14 @@ class Author:
         else:
             self.sort_name = sort_name
         self.print_name = print_name
-        self.books = []  # list of Book records (written by this author)
+        self.books: list[Book] = []  # list of Book records (written by this author)
 
 
-def main():
-    file = Path("book_reviews.tex").open()
+def main() -> None:
     init = False
-    books = []
-    readings = []
-    authors = []
+    books: list[Book] = []
+    readings: list[Reading] = []
+    authors: list[Author] = []
     new_reading = False
     temp_author_sort = ""
     temp_author_print = ""
@@ -147,221 +160,222 @@ def main():
     temp_german_trans = ""
     temp_translated = False
     temp_translator = ""
-    book = None
+    book: Book | None = None
     author = ""
 
-    for line in file:
-        if re.search(r"calc_stats_from_here", line):
-            init = True
-        elif init is False:
-            continue
-        elif re.search(r"\\booktitle", line):
-            if books:
-                # Do a bit of work on the author(s) of the previous before starting
-                # the next one. If an extra author line wasn't provided, just use
-                # the entry from the booktitle line.
-                if not temp_author_sort:
-                    temp_author_sort = author
+    with Path("book_reviews.tex").open() as file:
+        for line in file:
+            if re.search(r"calc_stats_from_here", line):
+                init = True
+            elif init is False:
+                continue
+            elif re.search(r"\\booktitle", line):
+                if books:
+                    # Do a bit of work on the author(s) of the previous before starting
+                    # the next one. If an extra author line wasn't provided, just use
+                    # the entry from the booktitle line.
+                    if not temp_author_sort:
+                        temp_author_sort = author
+                        temp_author_print = author
+                    # Parse the author strings and add to the author list if not there.
+                    # Returns the individual authors.
+                    book_authors = parse_authors(authors, temp_author_sort, temp_author_print)
+                    # Add each author to the book's list of authors, and add the book to
+                    # each author's list of books.
+                    for author in book_authors:
+                        book.authors.append(author)
+                        author.books.append(book)
+                    temp_author_sort = ""
+                    temp_author_print = ""
+                    # Assume any book that doesn't fit into another category is a novel.
+                    if (
+                        not book.nonfiction
+                        and not book.collection
+                        and not book.novella
+                        and not book.shortstory
+                        and not book.play
+                        and not book.epicpoem
+                        and not book.poetry
+                        and not book.graphicnovel
+                    ):
+                        book.novel = True
+                # Now for the new book entry!
+                processed_line = fix_special_characters(line)
+                # Remove backslashes before periods and ampersands.
+                processed_line = re.sub(r"\.\\ ", r". ", processed_line)
+                processed_line = re.sub(r" \\& ", r" & ", processed_line)
+                title_line = processed_line[:-1].split("{")
+                title = title_line[1][:-1]
+                author = title_line[2][:-1]
+                year = title_line[3][:-1]
+                # Also matches booktitlelabelauthor and booktitlelabelauthortwo.
+                reftitle = title_line[4][:-1] if re.search(r"\\booktitlelabel", line) else title
+                if re.search(r"\\booktitleauthortwo", line):
+                    # Assume these author names are safe for labels for now.
+                    temp_author_sort = title_line[4][:-1] + " & " + title_line[5][:-1]
+                    temp_author_print = temp_author_sort
+                elif re.search(r"\\booktitleauthorfive", line):
+                    # Assume these author names are safe for labels for now.
+                    temp_author_sort = (
+                        title_line[4][:-1]
+                        + " & "
+                        + title_line[5][:-1]
+                        + " & "
+                        + title_line[6][:-1]
+                        + " & "
+                        + title_line[7][:-1]
+                        + " & "
+                        + title_line[8][:-1]
+                    )
+                    temp_author_print = temp_author_sort
+                elif re.search(r"\\booktitleauthor", line):
+                    temp_author_sort = title_line[4][:-1]
                     temp_author_print = author
-                # Parse the author strings and add to the author list if not there.
-                # Returns the individual authors.
-                book_authors = parse_authors(authors, temp_author_sort, temp_author_print)
-                # Add each author to the book's list of authors, and add the book to
-                # each author's list of books.
-                for author in book_authors:
-                    book.authors.append(author)
-                    author.books.append(book)
-                temp_author_sort = ""
-                temp_author_print = ""
-                # Assume any book that doesn't fit into another category is a novel.
-                if (
-                    not book.nonfiction
-                    and not book.collection
-                    and not book.novella
-                    and not book.shortstory
-                    and not book.play
-                    and not book.epicpoem
-                    and not book.poetry
-                    and not book.graphicnovel
-                ):
-                    book.novel = True
-            # Now for the new book entry!
-            line = fix_special_characters(line)
-            # Remove backslashes before periods and ampersands.
-            line = re.sub(r"\.\\ ", r". ", line)
-            line = re.sub(r" \\& ", r" & ", line)
-            title_line = line[:-1].split("{")
-            title = title_line[1][:-1]
-            author = title_line[2][:-1]
-            year = title_line[3][:-1]
-            # Also matches booktitlelabelauthor and booktitlelabelauthortwo.
-            reftitle = title_line[4][:-1] if re.search(r"\\booktitlelabel", line) else title
-            if re.search(r"\\booktitleauthortwo", line):
-                # Assume these author names are safe for labels for now.
-                temp_author_sort = title_line[4][:-1] + " & " + title_line[5][:-1]
-                temp_author_print = temp_author_sort
-            elif re.search(r"\\booktitleauthorfive", line):
-                # Assume these author names are safe for labels for now.
-                temp_author_sort = (
-                    title_line[4][:-1]
-                    + " & "
-                    + title_line[5][:-1]
-                    + " & "
-                    + title_line[6][:-1]
-                    + " & "
-                    + title_line[7][:-1]
-                    + " & "
-                    + title_line[8][:-1]
+                elif re.search(r"\\booktitlelabelauthortwo", line):
+                    # Assume these author names are safe for labels for now.
+                    temp_author_sort = title_line[5][:-1] + " & " + title_line[6][:-1]
+                    temp_author_print = temp_author_sort
+                elif re.search(r"\\booktitlelabelauthor", line):
+                    temp_author_sort = title_line[5][:-1]
+                    temp_author_print = author
+                book = Book(title, author, year, reftitle)
+                books.append(book)
+                new_reading = True
+            # elif re.search(r'\\authorfix', line):
+            #     line = fix_special_characters(line)
+            #     author_line = line[:-1].split('{')
+            #     temp_author_sort = author_line[1][:-1]
+            #     temp_author_print = author_line[2][:-1]
+            elif re.search(r"\\country", line):
+                book.country = line[:-1].split("{")[1][:-1]
+            elif re.search(r"\\nonfiction", line):
+                book.nonfiction = True
+            elif re.search(r"\\collection", line):
+                book.collection = True
+            elif re.search(r"\\novella", line):
+                book.novella = True
+            elif re.search(r"\\shortstory", line):
+                book.shortstory = True
+            elif re.search(r"\\play", line):
+                book.play = True
+            elif re.search(r"\\epicpoem", line):
+                book.epicpoem = True
+            elif re.search(r"\\poetry", line):
+                book.poetry = True
+            elif re.search(r"\\graphicnovel", line):
+                book.graphicnovel = True
+            elif re.search(r"\\published", line):
+                pub_line = line[:-1].split("{")
+                book.published = (int(pub_line[1][:-1]), int(pub_line[2][:-1]))
+            elif re.search(r"\\series", line):
+                series_line = line[:-1].split("{")
+                # Ignore number of books in the series (if it is specified).
+                book.series = series_line[1][:-1]
+                book.series_index = int(series_line[2][:-1])
+            elif re.search(r"\\sequel", line):
+                book.sequel_of = line[:-1].split("{")[1][:-1]
+            elif re.search(r"\\germansame", line):
+                temp_german = True
+                book.language = "German"
+            elif re.search(r"\\german", line):
+                temp_german = True
+                temp_german_trans = line[:-1].split("{")[1][:-1]
+                book.language = "German"
+            elif re.search(r"\\translated", line):
+                # Remove backslashes before periods and ampersands.
+                processed_line = re.sub(r"\.\\ ", r". ", line)
+                processed_line = re.sub(r" \\& ", r" & ", processed_line)
+                trans_line = processed_line[:-1].split("{")
+                temp_translated = True
+                # Language is a feature of a book, not of a particular reading of
+                # it, but currently I have it associated with a given translation.
+                # Presumably, if I re-read it, the language would not change.
+                book.language = trans_line[1][:-1]
+                temp_translator = trans_line[2][:-1]
+            elif re.search(r"\\dates", line):
+                date_line = line[:-1].split("{")
+                dates = (date_line[1][:-1], date_line[2][:-1])
+                unfinished = False
+                unknown = False
+                reading = Reading(
+                    book,
+                    dates,
+                    temp_german,
+                    temp_german_trans,
+                    temp_translated,
+                    temp_translator,
+                    unfinished,
+                    unknown,
+                    len(book.reading) + 1,
                 )
-                temp_author_print = temp_author_sort
-            elif re.search(r"\\booktitleauthor", line):
-                temp_author_sort = title_line[4][:-1]
-                temp_author_print = author
-            elif re.search(r"\\booktitlelabelauthortwo", line):
-                # Assume these author names are safe for labels for now.
-                temp_author_sort = title_line[5][:-1] + " & " + title_line[6][:-1]
-                temp_author_print = temp_author_sort
-            elif re.search(r"\\booktitlelabelauthor", line):
-                temp_author_sort = title_line[5][:-1]
-                temp_author_print = author
-            book = Book(title, author, year, reftitle)
-            books.append(book)
-            new_reading = True
-        # elif re.search(r'\\authorfix', line):
-        #     line = fix_special_characters(line)
-        #     author_line = line[:-1].split('{')
-        #     temp_author_sort = author_line[1][:-1]
-        #     temp_author_print = author_line[2][:-1]
-        elif re.search(r"\\country", line):
-            book.country = line[:-1].split("{")[1][:-1]
-        elif re.search(r"\\nonfiction", line):
-            book.nonfiction = True
-        elif re.search(r"\\collection", line):
-            book.collection = True
-        elif re.search(r"\\novella", line):
-            book.novella = True
-        elif re.search(r"\\shortstory", line):
-            book.shortstory = True
-        elif re.search(r"\\play", line):
-            book.play = True
-        elif re.search(r"\\epicpoem", line):
-            book.epicpoem = True
-        elif re.search(r"\\poetry", line):
-            book.poetry = True
-        elif re.search(r"\\graphicnovel", line):
-            book.graphicnovel = True
-        elif re.search(r"\\published", line):
-            pub_line = line[:-1].split("{")
-            book.published = (int(pub_line[1][:-1]), int(pub_line[2][:-1]))
-        elif re.search(r"\\series", line):
-            series_line = line[:-1].split("{")
-            # Ignore number of books in the series (if it is specified).
-            book.series = series_line[1][:-1]
-            book.series_index = int(series_line[2][:-1])
-        elif re.search(r"\\sequel", line):
-            book.sequel_of = line[:-1].split("{")[1][:-1]
-        elif re.search(r"\\germansame", line):
-            temp_german = True
-            book.language = "German"
-        elif re.search(r"\\german", line):
-            temp_german = True
-            temp_german_trans = line[:-1].split("{")[1][:-1]
-            book.language = "German"
-        elif re.search(r"\\translated", line):
-            # Remove backslashes before periods and ampersands.
-            line = re.sub(r"\.\\ ", r". ", line)
-            line = re.sub(r" \\& ", r" & ", line)
-            trans_line = line[:-1].split("{")
-            temp_translated = True
-            # Language is a feature of a book, not of a particular reading of
-            # it, but currently I have it associated with a given translation.
-            # Presumably, if I re-read it, the language would not change.
-            book.language = trans_line[1][:-1]
-            temp_translator = trans_line[2][:-1]
-        elif re.search(r"\\dates", line):
-            date_line = line[:-1].split("{")
-            dates = (date_line[1][:-1], date_line[2][:-1])
-            unfinished = False
-            unknown = False
-            reading = Reading(
-                book,
-                dates,
-                temp_german,
-                temp_german_trans,
-                temp_translated,
-                temp_translator,
-                unfinished,
-                unknown,
-                len(book.reading) + 1,
-            )
-            book.reading.append(reading)
-            new_reading = True
-        elif re.search(r"\\finished", line):
-            dates = (0, line[:-1].split("{")[1][:-1])
-            unfinished = False
-            unknown = False
-            reading = Reading(
-                book,
-                dates,
-                temp_german,
-                temp_german_trans,
-                temp_translated,
-                temp_translator,
-                unfinished,
-                unknown,
-                len(book.reading) + 1,
-            )
-            book.reading.append(reading)
-            new_reading = True
-        elif re.search(r"\\unfinished", line):
-            dates = (line[:-1].split("{")[1][:-1], 0)
-            unfinished = True
-            unknown = False
-            reading = Reading(
-                book,
-                dates,
-                temp_german,
-                temp_german_trans,
-                temp_translated,
-                temp_translator,
-                unfinished,
-                unknown,
-                len(book.reading) + 1,
-            )
-            book.reading.append(reading)
-            new_reading = True
-        elif re.search(r"\\uncertain", line) or re.search(r"\\unknown", line):
-            dates = (0, 0)
-            unfinished = bool(re.search(r"\\unknownunfinished", line))
-            unknown = bool(re.search(r"\\unknown", line))
-            reading = Reading(
-                book,
-                dates,
-                temp_german,
-                temp_german_trans,
-                temp_translated,
-                temp_translator,
-                unfinished,
-                unknown,
-                len(book.reading) + 1,
-            )
-            book.reading.append(reading)
-            new_reading = True
-        elif re.search(r"\\rereading", line):
-            # Assume that the counter is set through the date fields, so we
-            # don't really need to use this flag/command for anything.
-            new_reading = True
-        elif re.search(r"\\ordering", line):
-            reading.ordering = int(line[:-1].split("{")[1][:-1])
-        elif re.search(r"\\score", line):
-            book.score = int(line[:-1].split("{")[1][:-1])
+                book.reading.append(reading)
+                new_reading = True
+            elif re.search(r"\\finished", line):
+                dates = (0, line[:-1].split("{")[1][:-1])
+                unfinished = False
+                unknown = False
+                reading = Reading(
+                    book,
+                    dates,
+                    temp_german,
+                    temp_german_trans,
+                    temp_translated,
+                    temp_translator,
+                    unfinished,
+                    unknown,
+                    len(book.reading) + 1,
+                )
+                book.reading.append(reading)
+                new_reading = True
+            elif re.search(r"\\unfinished", line):
+                dates = (line[:-1].split("{")[1][:-1], 0)
+                unfinished = True
+                unknown = False
+                reading = Reading(
+                    book,
+                    dates,
+                    temp_german,
+                    temp_german_trans,
+                    temp_translated,
+                    temp_translator,
+                    unfinished,
+                    unknown,
+                    len(book.reading) + 1,
+                )
+                book.reading.append(reading)
+                new_reading = True
+            elif re.search(r"\\uncertain", line) or re.search(r"\\unknown", line):
+                dates = (0, 0)
+                unfinished = bool(re.search(r"\\unknownunfinished", line))
+                unknown = bool(re.search(r"\\unknown", line))
+                reading = Reading(
+                    book,
+                    dates,
+                    temp_german,
+                    temp_german_trans,
+                    temp_translated,
+                    temp_translator,
+                    unfinished,
+                    unknown,
+                    len(book.reading) + 1,
+                )
+                book.reading.append(reading)
+                new_reading = True
+            elif re.search(r"\\rereading", line):
+                # Assume that the counter is set through the date fields, so we
+                # don't really need to use this flag/command for anything.
+                new_reading = True
+            elif re.search(r"\\ordering", line):
+                reading.ordering = int(line[:-1].split("{")[1][:-1])
+            elif re.search(r"\\score", line):
+                book.score = int(line[:-1].split("{")[1][:-1])
 
-        if new_reading:
-            temp_german = False
-            temp_german_trans = ""
-            temp_translated = False
-            temp_translator = ""
-            new_reading = False
+            if new_reading:
+                temp_german = False
+                temp_german_trans = ""
+                temp_translated = False
+                temp_translator = ""
+                new_reading = False
 
     print("Number of books read: ", len(books))
     readings = [reading for book in books for reading in book.reading]
@@ -373,105 +387,105 @@ def main():
     min_year_read = this_year
 
     # Print csv file to mimic the original spreadsheet.
-    csvfile = Path("booklist.csv").open("w", newline="", encoding="utf-8")
-    csv_out = csv.writer(csvfile, "excel")
-    # Write out header row.
-    csv_out.writerow(
-        [
-            "Date Began",
-            "Date Read",
-            "Author",
-            "Title",
-            "Translator",
-            "Published",
-            "Score",
-            "Country",
-            "German",
-            "Nonfiction",
-            "Novella",
-            "Collection",
-            "Short Story",
-            "Play",
-            "Epic Poem",
-            "Poetry",
-            "Graphic Novel",
-            "Re-Reading",
-            "Sequel Of",
-            "Series",
-        ]
-    )
-
-    for reading in reversed(readings):
-        newdates = []
-        for date in reading.date_strs:
-            # Build date strings for CSV/Excel display.
-            dateparts = str(date).split(".")
-            if len(dateparts) == 3:
-                newdates.append(dateparts[1] + "/" + dateparts[2] + "/" + dateparts[0])
-            elif len(dateparts) == 2:
-                newdates.append(dateparts[1] + "/" + dateparts[0])
-            elif reading.unfinished and len(newdates) >= 1:
-                if reading.unknown:
-                    newdates.append("??? ---")
-                else:
-                    newdates.append("---")
-            elif reading.unknown and len(newdates) >= 1:
-                newdates.append("???")
-            elif len(dateparts) == 1:
-                if dateparts[0] == "0":
-                    newdates.append("")
-                else:
-                    newdates.append(dateparts[0])
-            else:
-                newdates.append("")
-
-            # Calcuate year read. Use greater value of the two dates. Ignore
-            # zero values.
-            if len(dateparts) >= 1 and int(dateparts[0]) > 0:
-                reading.year_read = max(int(dateparts[0]), reading.year_read)
-                # Keep track of minimum year read.
-                min_year_read = min(min_year_read, reading.year_read)
-
-        print_year = re.sub(r"([0-9]*) B\.C\.E\.", r"-\1", str(reading.book.year))
-
-        print_score = "" if reading.book.score <= 0 else reading.book.score
-
-        print_german = "Y" if reading.german else ""
-        print_nonfiction = "Y" if reading.book.nonfiction else ""
-        print_novella = "Y" if reading.book.novella else ""
-        print_collection = "Y" if reading.book.collection else ""
-        print_shortstory = "Y" if reading.book.shortstory else ""
-        print_play = "Y" if reading.book.play else ""
-        print_epicpoem = "Y" if reading.book.epicpoem else ""
-        print_poetry = "Y" if reading.book.poetry else ""
-        print_graphicnovel = "Y" if reading.book.graphicnovel else ""
-
-        print_read_num = reading.read_num if len(reading.book.reading) > 1 else ""
-
+    with Path("booklist.csv").open("w", newline="", encoding="utf-8") as csvfile:
+        csv_out = csv.writer(csvfile, "excel")
+        # Write out header row.
         csv_out.writerow(
             [
-                newdates[0],
-                newdates[1],
-                reading.book.print_author,
-                reading.book.title,
-                reading.translator,
-                print_year,
-                print_score,
-                reading.book.country,
-                print_german,
-                print_nonfiction,
-                print_novella,
-                print_collection,
-                print_shortstory,
-                print_play,
-                print_epicpoem,
-                print_poetry,
-                print_graphicnovel,
-                print_read_num,
-                reading.book.sequel_of,
-                reading.book.series,
+                "Date Began",
+                "Date Read",
+                "Author",
+                "Title",
+                "Translator",
+                "Published",
+                "Score",
+                "Country",
+                "German",
+                "Nonfiction",
+                "Novella",
+                "Collection",
+                "Short Story",
+                "Play",
+                "Epic Poem",
+                "Poetry",
+                "Graphic Novel",
+                "Re-Reading",
+                "Sequel Of",
+                "Series",
             ]
         )
+
+        for reading in reversed(readings):
+            newdates = []
+            for date in reading.date_strs:
+                # Build date strings for CSV/Excel display.
+                dateparts = str(date).split(".")
+                if len(dateparts) == 3:
+                    newdates.append(dateparts[1] + "/" + dateparts[2] + "/" + dateparts[0])
+                elif len(dateparts) == 2:
+                    newdates.append(dateparts[1] + "/" + dateparts[0])
+                elif reading.unfinished and len(newdates) >= 1:
+                    if reading.unknown:
+                        newdates.append("??? ---")
+                    else:
+                        newdates.append("---")
+                elif reading.unknown and len(newdates) >= 1:
+                    newdates.append("???")
+                elif len(dateparts) == 1:
+                    if dateparts[0] == "0":
+                        newdates.append("")
+                    else:
+                        newdates.append(dateparts[0])
+                else:
+                    newdates.append("")
+
+                # Calcuate year read. Use greater value of the two dates. Ignore
+                # zero values.
+                if len(dateparts) >= 1 and int(dateparts[0]) > 0:
+                    reading.year_read = max(int(dateparts[0]), reading.year_read)
+                    # Keep track of minimum year read.
+                    min_year_read = min(min_year_read, reading.year_read)
+
+            print_year = re.sub(r"([0-9]*) B\.C\.E\.", r"-\1", str(reading.book.year))
+
+            print_score = "" if reading.book.score <= 0 else reading.book.score
+
+            print_german = "Y" if reading.german else ""
+            print_nonfiction = "Y" if reading.book.nonfiction else ""
+            print_novella = "Y" if reading.book.novella else ""
+            print_collection = "Y" if reading.book.collection else ""
+            print_shortstory = "Y" if reading.book.shortstory else ""
+            print_play = "Y" if reading.book.play else ""
+            print_epicpoem = "Y" if reading.book.epicpoem else ""
+            print_poetry = "Y" if reading.book.poetry else ""
+            print_graphicnovel = "Y" if reading.book.graphicnovel else ""
+
+            print_read_num = reading.read_num if len(reading.book.reading) > 1 else ""
+
+            csv_out.writerow(
+                [
+                    newdates[0],
+                    newdates[1],
+                    reading.book.print_author,
+                    reading.book.title,
+                    reading.translator,
+                    print_year,
+                    print_score,
+                    reading.book.country,
+                    print_german,
+                    print_nonfiction,
+                    print_novella,
+                    print_collection,
+                    print_shortstory,
+                    print_play,
+                    print_epicpoem,
+                    print_poetry,
+                    print_graphicnovel,
+                    print_read_num,
+                    reading.book.sequel_of,
+                    reading.book.series,
+                ]
+            )
 
     # Initialize list of years finished. Add an extra slot for early unknown
     # dates.
@@ -627,499 +641,502 @@ def main():
     #       pub_1950s, pub_1960s, pub_1970s, pub_1980s, pub_1990s, pub_2000s,
     #       pub_2010s, pub_2020s)
 
-    stat_file = Path("statistics.tex").open("w")
-    stat_file.write(r"\hyperref[sec:pubdate]{Books Read per Publication Year} \dotfill \pageref{sec:pubdate}" + "\n")
-    stat_file.write(
-        r"\\\indent\hyperref[sec:finished_date]{Books Read per Year} \dotfill \pageref{sec:finished_date}" + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:unfinished_list]{List of Unfinished Books} \dotfill \pageref{sec:unfinished_list}"
-        + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:rereading_list]{List of Re-read Books} \dotfill \pageref{sec:rereading_list}" + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:finished_category]{Books Read per Year by Category} \dotfill \pageref{sec:finished_category}"
-        + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:category_list]{List of Books per Category} \dotfill \pageref{sec:category_list}" + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:country_table]{Books Read per Country} \dotfill \pageref{sec:country_table}" + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:country_list]{List of Books per Country} \dotfill \pageref{sec:country_list}" + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:language_table]{Books Read per Language} \dotfill \pageref{sec:language_table}" + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:language_list]{List of Books per Language} \dotfill \pageref{sec:language_list}" + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:score_table]{Books Read per Score} \dotfill \pageref{sec:score_table}" + "\n"
-    )
-    stat_file.write(
-        r"\\\indent\hyperref[sec:score_list]{List of Books per Score} \dotfill \pageref{sec:score_list}" + "\n"
-    )
-    for x in reversed(range(6)):
-        stat_file.write(r"\\\indent\indent\hyperref[sec:score" + str(x) + "]")
-        if x == 0:
-            stat_file.write("{Unscored}")
-        else:
-            stat_file.write("{Score of " + str(x) + "}")
-        stat_file.write(r" \dotfill \pageref{sec:score" + str(x) + "}" + "\n")
-    stat_file.write(r"\\\indent\hyperref[sec:series_list]{List of Series} \dotfill \pageref{sec:series_list}" + "\n")
-    stat_file.write(
-        r"\\\indent\hyperref[sec:author_table]{Most Read Authors} \dotfill \pageref{sec:author_table}" + "\n"
-    )
-    stat_file.write(r"\\\indent\hyperref[sec:author_list]{List of Authors} \dotfill \pageref{sec:author_list}" + "\n")
-    stat_file.write(
-        r"\\\indent\hyperref[sec:duration_list]{List of Books by Duration} \dotfill \pageref{sec:duration_list}" + "\n"
-    )
-    stat_file.write("\n")
-
-    # Books per millenium/century/decade of publication.
-    stat_file.write(
-        "\\subsection*{Number of books read per era/decade of original publication, not counting re-readings} \\label{sec:pubdate}\n\n"
-    )
-    stat_file.write("\\begin{tabular}{|r|l|}\n")
-    stat_file.write("  \\hline\n")
-    stat_file.write("  \\textit{era/decade} & \\textit{number read} \\\\ \\hline\n")
-    stat_file.write("  B.C.E. & " + str(pub_bce) + " \\\\ \\hline\n")
-    stat_file.write("  1-1000 & " + str(pub_1_1000) + " \\\\ \\hline\n")
-    stat_file.write("  1001-1500 & " + str(pub_1001_1500) + " \\\\ \\hline\n")
-    stat_file.write("  1501-1600 & " + str(pub_16th) + " \\\\ \\hline\n")
-    stat_file.write("  1601-1700 & " + str(pub_17th) + " \\\\ \\hline\n")
-    stat_file.write("  1701-1800 & " + str(pub_18th) + " \\\\ \\hline\n")
-    stat_file.write("  1801-1900 & " + str(pub_19th) + " \\\\ \\hline\n")
-    stat_file.write("  1901-1910 & " + str(pub_1900s) + " \\\\ \\hline\n")
-    stat_file.write("  1911-1920 & " + str(pub_1910s) + " \\\\ \\hline\n")
-    stat_file.write("  1921-1930 & " + str(pub_1920s) + " \\\\ \\hline\n")
-    stat_file.write("  1931-1940 & " + str(pub_1930s) + " \\\\ \\hline\n")
-    stat_file.write("  1941-1950 & " + str(pub_1940s) + " \\\\ \\hline\n")
-    stat_file.write("  1951-1960 & " + str(pub_1950s) + " \\\\ \\hline\n")
-    stat_file.write("  1961-1970 & " + str(pub_1960s) + " \\\\ \\hline\n")
-    stat_file.write("  1971-1980 & " + str(pub_1970s) + " \\\\ \\hline\n")
-    stat_file.write("  1981-1990 & " + str(pub_1980s) + " \\\\ \\hline\n")
-    stat_file.write("  1991-2000 & " + str(pub_1990s) + " \\\\ \\hline\n")
-    stat_file.write("  2001-2010 & " + str(pub_2000s) + " \\\\ \\hline\n")
-    stat_file.write("  2011-2020 & " + str(pub_2010s) + " \\\\ \\hline\n")
-    stat_file.write("  2021-2030 & " + str(pub_2020s) + " \\\\ \\hline\n")
-    stat_file.write("  total & " + str(len(books)) + " \\\\ \\hline\n")
-    stat_file.write("\\end{tabular}\n")
-
-    # Books read per year, including unfinished, German, and rereadings.
-    stat_file.write("\\subsection*{Number of books read per year} \\label{sec:finished_date}\n\n")
-    stat_file.write("\\begin{tabular}{|r|l|l|l|l|}\n")
-    stat_file.write("  \\hline\n")
-    stat_file.write(
-        r"  \textit{year} & \textit{count} & "
-        + r"\textit{\hyperref[sec:unfinished_list]{unfinished}} & "
-        + r"\textit{German} & \textit{\hyperref[sec:rereading_list]{rereading}} \\ \hline"
-        + "\n"
-    )
-    for x in range(num_years_read):
-        if x == 0:
-            stat_file.write("  Unknown")
-        else:
-            stat_file.write("  " + str(min_year_read + x - 1))
+    with Path("statistics.tex").open("w") as stat_file:
+        stat_file.write(r"\hyperref[sec:pubdate]{Books Read per Publication Year} \dotfill \pageref{sec:pubdate}" + "\n")
         stat_file.write(
-            " & "
-            + str(finished_by_year[x])
-            + " & "
-            + str(unfinished_by_year[x])
-            + " & "
-            + str(german_by_year[x])
-            + " & "
-            + str(reread_by_year[x])
-            + " \\\\ \\hline\n"
+            r"\\\indent\hyperref[sec:finished_date]{Books Read per Year} \dotfill \pageref{sec:finished_date}" + "\n"
         )
-    # Print totals of all years.
-    stat_file.write(
-        "  total & "
-        + str(len(readings))
-        + " & "
-        + str(sum(unfinished_by_year))
-        + " & "
-        + str(sum(german_by_year))
-        + " & "
-        + str(sum(reread_by_year))
-        + " \\\\ \\hline\n"
-    )
-    stat_file.write("\\end{tabular}\n")
-
-    # List of unfinished books
-    stat_file.write("\\subsection*{List of unfinished books} \\label{sec:unfinished_list}\n\n")
-    counter = 1
-    for reading in (reading for reading in readings if reading.unfinished):
-        title = re.sub(r" & ", r" \& ", reading.book.title)
-        author = re.sub(r" & ", r" \& ", reading.book.print_author)
         stat_file.write(
-            str(counter)
-            + ". \\textit{\\hyperref[sec:"
-            + reading.book.reftitle
-            + "]{"
-            + title
-            + "}} by "
-            + author
-            + " ("
-            + reading.book.print_year
-            + ")\n\n"
+            r"\\\indent\hyperref[sec:unfinished_list]{List of Unfinished Books} \dotfill \pageref{sec:unfinished_list}"
+            + "\n"
         )
-        counter = counter + 1
-
-    # List of rereadings
-    stat_file.write("\\subsection*{List of books read more than once} \\label{sec:rereading_list}\n\n")
-    counter = 1
-    for book in (book for book in books if len(book.reading) > 1):
-        title = re.sub(r" & ", r" \& ", book.title)
-        author = re.sub(r" & ", r" \& ", book.print_author)
         stat_file.write(
-            str(counter)
-            + ". \\textit{\\hyperref[sec:"
-            + book.reftitle
-            + "]{"
-            + title
-            + "}} by "
-            + author
-            + " ("
-            + book.print_year
-            + ")\n\n"
+            r"\\\indent\hyperref[sec:rereading_list]{List of Re-read Books} \dotfill \pageref{sec:rereading_list}" + "\n"
         )
-        counter = counter + 1
-
-    # Books read by year, broken down by category.
-    stat_file.write("\\subsection*{Type of books read per year} \\label{sec:finished_category}\n\n")
-    stat_file.write("{\\small\n")  # Reduce font size for wide table
-    stat_file.write("\\begin{tabular}{|r|l|l|l|l|l|l|l|l|l|}\n")
-    stat_file.write("  \\hline\n")
-    stat_file.write(
-        r"  \textit{year} & \textit{\hyperref[category:nonfiction]{nonfiction}} & "
-        + r"\textit{\hyperref[category:collection]{collection}} & "
-        + r"\textit{\hyperref[category:novella]{novella}} & "
-        + r"\textit{\hyperref[category:shortstory]{short}} & "
-        + r"\textit{\hyperref[category:play]{play}} & "
-        + r"\textit{\hyperref[category:epicpoem]{epic}} & "
-        + r"\textit{\hyperref[category:poetry]{poetry}} & "
-        + r"\textit{\hyperref[category:graphicnovel]{graphic}} & "
-        + r"\textit{\hyperref[category:novel]{novel}} \\ \hline"
-        + "\n"
-    )
-    for x in range(num_years_read):
-        if x == 0:
-            stat_file.write("  Unknown")
-        else:
-            stat_file.write("  " + str(min_year_read + x - 1))
         stat_file.write(
-            " & "
-            + str(nonfiction_by_year[x])
-            + " & "
-            + str(collections_by_year[x])
-            + " & "
-            + str(novellas_by_year[x])
-            + " & "
-            + str(shorts_by_year[x])
-            + " & "
-            + str(plays_by_year[x])
-            + " & "
-            + str(epics_by_year[x])
-            + " & "
-            + str(poetry_by_year[x])
-            + " & "
-            + str(graphic_by_year[x])
-            + " & "
-            + str(novels_by_year[x])
-            + " \\\\ \\hline\n"
+            r"\\\indent\hyperref[sec:finished_category]{Books Read per Year by Category} \dotfill \pageref{sec:finished_category}"
+            + "\n"
         )
-    # Print totals of all years.
-    stat_file.write(
-        "  total & "
-        + str(sum(nonfiction_by_year))
-        + " & "
-        + str(sum(collections_by_year))
-        + " & "
-        + str(sum(novellas_by_year))
-        + " & "
-        + str(sum(shorts_by_year))
-        + " & "
-        + str(sum(plays_by_year))
-        + " & "
-        + str(sum(epics_by_year))
-        + " & "
-        + str(sum(poetry_by_year))
-        + " & "
-        + str(sum(graphic_by_year))
-        + " & "
-        + str(sum(novels_by_year))
-        + " \\\\ \\hline\n"
-    )
-    stat_file.write("\\end{tabular}\n")
-    stat_file.write("}\\normalsize\n")  # Restore normal font size
-
-    categories = [
-        "Nonfiction",
-        "Collection",
-        "Novella",
-        "Short Story",
-        "Play",
-        "Epic Poem",
-        "Poetry",
-        "Graphic Novel",
-        "Novel",
-    ]
-    fields = [
-        "nonfiction",
-        "collection",
-        "novella",
-        "shortstory",
-        "play",
-        "epicpoem",
-        "poetry",
-        "graphicnovel",
-        "novel",
-    ]
-
-    stat_file.write("\\subsection*{Books listed by category} \\label{sec:category_list}\n\n")
-    for x in range(len(categories)):
-        stat_file.write("\\subsubsection*{" + categories[x] + "} \\label{category:" + fields[x] + "}\n\n")
-        counter = 1
-        for book in (book for book in books if getattr(book, fields[x])):
-            title = re.sub(r" & ", r" \& ", book.title)
-            author = re.sub(r" & ", r" \& ", book.print_author)
-            stat_file.write(
-                str(counter)
-                + ". \\textit{\\hyperref[sec:"
-                + book.reftitle
-                + "]{"
-                + title
-                + "}} by "
-                + author
-                + " ("
-                + book.print_year
-                + ")\n\n"
-            )
-            counter = counter + 1
-
-    # Number of books per country
-    stat_file.write("\\subsection*{Books read per nation of origin of author/subject} \\label{sec:country_table}\n\n")
-    stat_file.write("\\begin{tabular}{|r|l|}\n")
-    stat_file.write("  \\hline\n")
-    stat_file.write("  \\textit{nation} & \\textit{count} \\\\ \\hline\n")
-    stat_file.writelines(
-        "  \\hyperref[nation:" + nation + "]{" + nation + "} & " + str(countries[nation]) + " \\\\ \\hline\n"
-        for nation in sorted(countries)
-    )
-    stat_file.write("\\end{tabular}\n")
-
-    # List of books per country
-    stat_file.write("\\subsection*{Books listed by nation} \\label{sec:country_list}\n\n")
-    for nation in sorted(countries):
-        # if nation == 'USA' or nation == 'England':
-        #     continue
-        stat_file.write("\\subsubsection*{" + nation + "} \\label{nation:" + nation + "}\n\n")
-        counter = 1
-        for book in (book for book in books if book.country == nation):
-            title = re.sub(r" & ", r" \& ", book.title)
-            author = re.sub(r" & ", r" \& ", book.print_author)
-            stat_file.write(
-                str(counter)
-                + ". \\textit{\\hyperref[sec:"
-                + book.reftitle
-                + "]{"
-                + title
-                + "}} by "
-                + author
-                + " ("
-                + book.print_year
-                + ")\n\n"
-            )
-            counter = counter + 1
-
-    # Number of books per original language
-    # Note: There are two reasons that the Germany + Austria + Switzerland count
-    # does not equal the German-language count. First, some German-language
-    # books were written by people ethnically not German (i.e. Kafka and Rilke).
-    # Second, Loom of Language is English-language but written by a Swiss man.
-    stat_file.write("\\subsection*{Books read per original language} \\label{sec:language_table}\n\n")
-    stat_file.write("\\begin{tabular}{|r|l|}\n")
-    stat_file.write("  \\hline\n")
-    stat_file.write("  \\textit{language} & \\textit{count} \\\\ \\hline\n")
-    for lang in sorted(languages):
-        if lang == "English":
-            stat_file.write("  " + lang + " & " + str(languages[lang]) + " \\\\ \\hline\n")
-        else:
-            stat_file.write(
-                "  \\hyperref[lang:" + lang + "]{" + lang + "} & " + str(languages[lang]) + " \\\\ \\hline\n"
-            )
-    stat_file.write("\\end{tabular}\n")
-
-    # List of books per original language
-    stat_file.write("\\subsection*{Books listed for languages other than English} \\label{sec:language_list}\n\n")
-    for lang in sorted(languages):
-        if lang == "English":
-            continue
-        stat_file.write("\\subsubsection*{" + lang + "} \\label{lang:" + lang + "}\n\n")
-        counter = 1
-        for book in (book for book in books if book.language == lang):
-            title = re.sub(r" & ", r" \& ", book.title)
-            author = re.sub(r" & ", r" \& ", book.print_author)
-            stat_file.write(
-                str(counter)
-                + ". \\textit{\\hyperref[sec:"
-                + book.reftitle
-                + "]{"
-                + title
-                + "}} by "
-                + author
-                + " ("
-                + book.print_year
-                + ")\n\n"
-            )
-            counter = counter + 1
-
-    # Number of books per score
-    stat_file.write("\\subsection*{Books per personal score} \\label{sec:score_table}\n\n")
-    stat_file.write("\\begin{tabular}{|r|l|}\n")
-    stat_file.write("  \\hline\n")
-    stat_file.write("  \\textit{score} & \\textit{count} \\\\ \\hline\n")
-    for x in reversed(range(6)):
-        if x == 0:
-            stat_file.write("  \\hyperref[sec:score0]{Unscored")
-        else:
-            stat_file.write("  \\hyperref[sec:score" + str(x) + "]{" + str(x))
-        stat_file.write("} & " + str(scores[x]) + " \\\\ \\hline\n")
-    stat_file.write("\\end{tabular}\n")
-
-    # List of books per score
-    stat_file.write("\\subsection*{Books listed by score} \\label{sec:score_list}\n\n")
-    for x in reversed(range(6)):
-        if x == 0:
-            stat_file.write("\\subsubsection*{Unscored books} \\label{sec:score0}\n\n")
-        else:
-            stat_file.write(
-                "\\subsubsection*{Books given a score of " + str(x) + "} \\label{sec:score" + str(x) + "}\n\n"
-            )
-        counter = 1
-        for book in (book for book in books if book.score == x):
-            title = re.sub(r" & ", r" \& ", book.title)
-            author = re.sub(r" & ", r" \& ", book.print_author)
-            stat_file.write(
-                str(counter)
-                + ". \\textit{\\hyperref[sec:"
-                + book.reftitle
-                + "]{"
-                + title
-                + "}} by "
-                + author
-                + " ("
-                + book.print_year
-                + ")\n\n"
-            )
-            counter = counter + 1
-
-    # List of series
-    stat_file.write("\\subsection*{List of series} \\label{sec:series_list}\n\n")
-    for series in sorted(series_dict, key=lambda s: re.sub(r"^(The|A|An|Der|Die|Das|Ein|Eine) ", "", s)):
-        stat_file.write("\\subsubsection*{" + series + "} \\label{series:" + series + "}\n\n")
-        counter = 1
-        series_books = sorted(
-            (book for book in books if book.series == series), key=operator.attrgetter("series_index")
+        stat_file.write(
+            r"\\\indent\hyperref[sec:category_list]{List of Books per Category} \dotfill \pageref{sec:category_list}" + "\n"
         )
-        for book in series_books:
-            title = re.sub(r" & ", r" \& ", book.title)
-            author = re.sub(r" & ", r" \& ", book.print_author)
-            stat_file.write(
-                str(counter)
-                + r". \textit{\hyperref[sec:"
-                + book.reftitle
-                + "]{"
-                + title
-                + r"}} (\#"
-                + str(book.series_index)
-                + ") by "
-                + author
-                + " ("
-                + book.print_year
-                + ")"
-                + "\n\n"
-            )
-            counter = counter + 1
+        stat_file.write(
+            r"\\\indent\hyperref[sec:country_table]{Books Read per Country} \dotfill \pageref{sec:country_table}" + "\n"
+        )
+        stat_file.write(
+            r"\\\indent\hyperref[sec:country_list]{List of Books per Country} \dotfill \pageref{sec:country_list}" + "\n"
+        )
+        stat_file.write(
+            r"\\\indent\hyperref[sec:language_table]{Books Read per Language} \dotfill \pageref{sec:language_table}" + "\n"
+        )
+        stat_file.write(
+            r"\\\indent\hyperref[sec:language_list]{List of Books per Language} \dotfill \pageref{sec:language_list}" + "\n"
+        )
+        stat_file.write(
+            r"\\\indent\hyperref[sec:score_table]{Books Read per Score} \dotfill \pageref{sec:score_table}" + "\n"
+        )
+        stat_file.write(
+            r"\\\indent\hyperref[sec:score_list]{List of Books per Score} \dotfill \pageref{sec:score_list}" + "\n"
+        )
+        for x in reversed(range(6)):
+            stat_file.write(r"\\\indent\indent\hyperref[sec:score" + str(x) + "]")
+            if x == 0:
+                stat_file.write("{Unscored}")
+            else:
+                stat_file.write("{Score of " + str(x) + "}")
+            stat_file.write(r" \dotfill \pageref{sec:score" + str(x) + "}" + "\n")
+        stat_file.write(r"\\\indent\hyperref[sec:series_list]{List of Series} \dotfill \pageref{sec:series_list}" + "\n")
+        stat_file.write(
+            r"\\\indent\hyperref[sec:author_table]{Most Read Authors} \dotfill \pageref{sec:author_table}" + "\n"
+        )
+        stat_file.write(r"\\\indent\hyperref[sec:author_list]{List of Authors} \dotfill \pageref{sec:author_list}" + "\n")
+        stat_file.write(
+            r"\\\indent\hyperref[sec:duration_list]{List of Books by Duration} \dotfill \pageref{sec:duration_list}" + "\n"
+        )
+        stat_file.write("\n")
 
-    # Most read authors (using longtable to allow multi-page tables)
-    stat_file.write("\\subsection*{Most read authors} \\label{sec:author_table}\n\n")
-    stat_file.write("\\begin{longtable}{|r|l|}\n")
-    stat_file.write("  \\hline\n")
-    stat_file.write("  \\textit{author} & \\textit{count} \\\\ \\hline\n")
-    stat_file.write("  \\endfirsthead\n")  # End of first page header
-    stat_file.write("  \\hline\n")
-    stat_file.write("  \\textit{author} & \\textit{count} \\\\ \\hline\n")
-    stat_file.write("  \\endhead\n")  # Header repeated on subsequent pages
-    stat_file.write("  \\hline\n")
-    stat_file.write("  \\endfoot\n")  # Footer on each page except last
-    for author in sorted(authors, key=lambda x: len(x.books), reverse=True):
-        # List authors with more than two books read.
-        if len(author.books) > 2:
+        # Books per millenium/century/decade of publication.
+        stat_file.write(
+            "\\subsection*{Number of books read per era/decade of original publication, not counting re-readings} \\label{sec:pubdate}\n\n"
+        )
+        stat_file.write("\\begin{tabular}{|r|l|}\n")
+        stat_file.write("  \\hline\n")
+        stat_file.write("  \\textit{era/decade} & \\textit{number read} \\\\ \\hline\n")
+        stat_file.write("  B.C.E. & " + str(pub_bce) + " \\\\ \\hline\n")
+        stat_file.write("  1-1000 & " + str(pub_1_1000) + " \\\\ \\hline\n")
+        stat_file.write("  1001-1500 & " + str(pub_1001_1500) + " \\\\ \\hline\n")
+        stat_file.write("  1501-1600 & " + str(pub_16th) + " \\\\ \\hline\n")
+        stat_file.write("  1601-1700 & " + str(pub_17th) + " \\\\ \\hline\n")
+        stat_file.write("  1701-1800 & " + str(pub_18th) + " \\\\ \\hline\n")
+        stat_file.write("  1801-1900 & " + str(pub_19th) + " \\\\ \\hline\n")
+        stat_file.write("  1901-1910 & " + str(pub_1900s) + " \\\\ \\hline\n")
+        stat_file.write("  1911-1920 & " + str(pub_1910s) + " \\\\ \\hline\n")
+        stat_file.write("  1921-1930 & " + str(pub_1920s) + " \\\\ \\hline\n")
+        stat_file.write("  1931-1940 & " + str(pub_1930s) + " \\\\ \\hline\n")
+        stat_file.write("  1941-1950 & " + str(pub_1940s) + " \\\\ \\hline\n")
+        stat_file.write("  1951-1960 & " + str(pub_1950s) + " \\\\ \\hline\n")
+        stat_file.write("  1961-1970 & " + str(pub_1960s) + " \\\\ \\hline\n")
+        stat_file.write("  1971-1980 & " + str(pub_1970s) + " \\\\ \\hline\n")
+        stat_file.write("  1981-1990 & " + str(pub_1980s) + " \\\\ \\hline\n")
+        stat_file.write("  1991-2000 & " + str(pub_1990s) + " \\\\ \\hline\n")
+        stat_file.write("  2001-2010 & " + str(pub_2000s) + " \\\\ \\hline\n")
+        stat_file.write("  2011-2020 & " + str(pub_2010s) + " \\\\ \\hline\n")
+        stat_file.write("  2021-2030 & " + str(pub_2020s) + " \\\\ \\hline\n")
+        stat_file.write("  total & " + str(len(books)) + " \\\\ \\hline\n")
+        stat_file.write("\\end{tabular}\n")
+
+        # Books read per year, including unfinished, German, and rereadings.
+        stat_file.write("\\subsection*{Number of books read per year} \\label{sec:finished_date}\n\n")
+        stat_file.write("\\begin{tabular}{|r|l|l|l|l|}\n")
+        stat_file.write("  \\hline\n")
+        stat_file.write(
+            r"  \textit{year} & \textit{count} & "
+            + r"\textit{\hyperref[sec:unfinished_list]{unfinished}} & "
+            + r"\textit{German} & \textit{\hyperref[sec:rereading_list]{rereading}} \\ \hline"
+            + "\n"
+        )
+        for x in range(num_years_read):
+            if x == 0:
+                stat_file.write("  Unknown")
+            else:
+                stat_file.write("  " + str(min_year_read + x - 1))
             stat_file.write(
-                "  \\hyperref[sec:"
-                + author.label_name
-                + "]{"
-                + author.print_name
-                + "} & "
-                + str(len(author.books))
+                " & "
+                + str(finished_by_year[x])
+                + " & "
+                + str(unfinished_by_year[x])
+                + " & "
+                + str(german_by_year[x])
+                + " & "
+                + str(reread_by_year[x])
                 + " \\\\ \\hline\n"
             )
-    stat_file.write("\\end{longtable}\n")
+        # Print totals of all years.
+        stat_file.write(
+            "  total & "
+            + str(len(readings))
+            + " & "
+            + str(sum(unfinished_by_year))
+            + " & "
+            + str(sum(german_by_year))
+            + " & "
+            + str(sum(reread_by_year))
+            + " \\\\ \\hline\n"
+        )
+        stat_file.write("\\end{tabular}\n")
 
-    # List of books by author (sorted by publication year)
-    stat_file.write("\\subsection*{Books listed by author} \\label{sec:author_list}\n\n")
-    for author in sorted(authors, key=operator.attrgetter("sort_name")):
-        stat_file.write("\\subsubsection*{" + author.print_name + "} \\label{sec:" + author.label_name + "}\n\n")
+        # List of unfinished books
+        stat_file.write("\\subsection*{List of unfinished books} \\label{sec:unfinished_list}\n\n")
         counter = 1
-        for book in sorted(author.books, key=lambda x: x.year):
+        for reading in (reading for reading in readings if reading.unfinished):
+            title = re.sub(r" & ", r" \& ", reading.book.title)
+            author = re.sub(r" & ", r" \& ", reading.book.print_author)
+            stat_file.write(
+                str(counter)
+                + ". \\textit{\\hyperref[sec:"
+                + reading.book.reftitle
+                + "]{"
+                + title
+                + "}} by "
+                + author
+                + " ("
+                + reading.book.print_year
+                + ")\n\n"
+            )
+            counter = counter + 1
+
+        # List of rereadings
+        stat_file.write("\\subsection*{List of books read more than once} \\label{sec:rereading_list}\n\n")
+        counter = 1
+        for book in (book for book in books if len(book.reading) > 1):
             title = re.sub(r" & ", r" \& ", book.title)
+            author = re.sub(r" & ", r" \& ", book.print_author)
             stat_file.write(
                 str(counter)
                 + ". \\textit{\\hyperref[sec:"
                 + book.reftitle
                 + "]{"
                 + title
-                + "}} ("
+                + "}} by "
+                + author
+                + " ("
                 + book.print_year
                 + ")\n\n"
             )
             counter = counter + 1
 
-    # List of books by length of time spent reading them
-    stat_file.write("\\subsection*{Books listed by duration} \\label{sec:duration_list}\n\n")
-    for reading in sorted(readings, key=operator.attrgetter("duration")):
-        if reading.unknown or reading.unfinished or reading.date_strs[0] == 0:
-            continue
-        title = re.sub(r" & ", r" \& ", reading.book.title)
-        author = re.sub(r" & ", r" \& ", reading.book.print_author)
+        # Books read by year, broken down by category.
+        stat_file.write("\\subsection*{Type of books read per year} \\label{sec:finished_category}\n\n")
+        stat_file.write("{\\small\n")  # Reduce font size for wide table
+        stat_file.write("\\begin{tabular}{|r|l|l|l|l|l|l|l|l|l|}\n")
+        stat_file.write("  \\hline\n")
         stat_file.write(
-            "\\textit{\\hyperref[sec:"
-            + reading.book.reftitle
-            + "]{"
-            + title
-            + "}} by "
-            + author
-            + " ("
-            + reading.book.print_year
-            + "): "
-            + str(reading.duration.days + 1)
+            r"  \textit{year} & \textit{\hyperref[category:nonfiction]{nonfiction}} & "
+            + r"\textit{\hyperref[category:collection]{collection}} & "
+            + r"\textit{\hyperref[category:novella]{novella}} & "
+            + r"\textit{\hyperref[category:shortstory]{short}} & "
+            + r"\textit{\hyperref[category:play]{play}} & "
+            + r"\textit{\hyperref[category:epicpoem]{epic}} & "
+            + r"\textit{\hyperref[category:poetry]{poetry}} & "
+            + r"\textit{\hyperref[category:graphicnovel]{graphic}} & "
+            + r"\textit{\hyperref[category:novel]{novel}} \\ \hline"
+            + "\n"
         )
-        if reading.duration.days == 0:  # 1 day
-            stat_file.write(" day\n\n")
-        else:
-            stat_file.write(" days\n\n")
+        for x in range(num_years_read):
+            if x == 0:
+                stat_file.write("  Unknown")
+            else:
+                stat_file.write("  " + str(min_year_read + x - 1))
+            stat_file.write(
+                " & "
+                + str(nonfiction_by_year[x])
+                + " & "
+                + str(collections_by_year[x])
+                + " & "
+                + str(novellas_by_year[x])
+                + " & "
+                + str(shorts_by_year[x])
+                + " & "
+                + str(plays_by_year[x])
+                + " & "
+                + str(epics_by_year[x])
+                + " & "
+                + str(poetry_by_year[x])
+                + " & "
+                + str(graphic_by_year[x])
+                + " & "
+                + str(novels_by_year[x])
+                + " \\\\ \\hline\n"
+            )
+        # Print totals of all years.
+        stat_file.write(
+            "  total & "
+            + str(sum(nonfiction_by_year))
+            + " & "
+            + str(sum(collections_by_year))
+            + " & "
+            + str(sum(novellas_by_year))
+            + " & "
+            + str(sum(shorts_by_year))
+            + " & "
+            + str(sum(plays_by_year))
+            + " & "
+            + str(sum(epics_by_year))
+            + " & "
+            + str(sum(poetry_by_year))
+            + " & "
+            + str(sum(graphic_by_year))
+            + " & "
+            + str(sum(novels_by_year))
+            + " \\\\ \\hline\n"
+        )
+        stat_file.write("\\end{tabular}\n")
+        stat_file.write("}\\normalsize\n")  # Restore normal font size
 
-    # Calculate most number of books in progress at one time? Tedious!
+        categories = [
+            "Nonfiction",
+            "Collection",
+            "Novella",
+            "Short Story",
+            "Play",
+            "Epic Poem",
+            "Poetry",
+            "Graphic Novel",
+            "Novel",
+        ]
+        fields = [
+            "nonfiction",
+            "collection",
+            "novella",
+            "shortstory",
+            "play",
+            "epicpoem",
+            "poetry",
+            "graphicnovel",
+            "novel",
+        ]
+
+        stat_file.write("\\subsection*{Books listed by category} \\label{sec:category_list}\n\n")
+        for x in range(len(categories)):
+            stat_file.write("\\subsubsection*{" + categories[x] + "} \\label{category:" + fields[x] + "}\n\n")
+            counter = 1
+            for book in (book for book in books if getattr(book, fields[x])):
+                title = re.sub(r" & ", r" \& ", book.title)
+                author = re.sub(r" & ", r" \& ", book.print_author)
+                stat_file.write(
+                    str(counter)
+                    + ". \\textit{\\hyperref[sec:"
+                    + book.reftitle
+                    + "]{"
+                    + title
+                    + "}} by "
+                    + author
+                    + " ("
+                    + book.print_year
+                    + ")\n\n"
+                )
+                counter = counter + 1
+
+        # Number of books per country
+        stat_file.write("\\subsection*{Books read per nation of origin of author/subject} \\label{sec:country_table}\n\n")
+        stat_file.write("\\begin{tabular}{|r|l|}\n")
+        stat_file.write("  \\hline\n")
+        stat_file.write("  \\textit{nation} & \\textit{count} \\\\ \\hline\n")
+        # if nation == 'USA' or nation == 'England':
+        #     stat_file.write('  ' + nation + ' & ' + str(countries[nation]) + ' \\\\ \\hline\n')
+        # else:
+        stat_file.writelines(
+            "  \\hyperref[nation:" + nation + "]{" + nation + "} & " + str(countries[nation]) + " \\\\ \\hline\n"
+            for nation in sorted(countries)
+        )
+        stat_file.write("\\end{tabular}\n")
+
+        # List of books per country
+        stat_file.write("\\subsection*{Books listed by nation} \\label{sec:country_list}\n\n")
+        for nation in sorted(countries):
+            # if nation == 'USA' or nation == 'England':
+            #     continue
+            stat_file.write("\\subsubsection*{" + nation + "} \\label{nation:" + nation + "}\n\n")
+            counter = 1
+            for book in (book for book in books if book.country == nation):
+                title = re.sub(r" & ", r" \& ", book.title)
+                author = re.sub(r" & ", r" \& ", book.print_author)
+                stat_file.write(
+                    str(counter)
+                    + ". \\textit{\\hyperref[sec:"
+                    + book.reftitle
+                    + "]{"
+                    + title
+                    + "}} by "
+                    + author
+                    + " ("
+                    + book.print_year
+                    + ")\n\n"
+                )
+                counter = counter + 1
+
+        # Number of books per original language
+        # Note: There are two reasons that the Germany + Austria + Switzerland count
+        # does not equal the German-language count. First, some German-language
+        # books were written by people ethnically not German (i.e. Kafka and Rilke).
+        # Second, Loom of Language is English-language but written by a Swiss man.
+        stat_file.write("\\subsection*{Books read per original language} \\label{sec:language_table}\n\n")
+        stat_file.write("\\begin{tabular}{|r|l|}\n")
+        stat_file.write("  \\hline\n")
+        stat_file.write("  \\textit{language} & \\textit{count} \\\\ \\hline\n")
+        for lang in sorted(languages):
+            if lang == "English":
+                stat_file.write("  " + lang + " & " + str(languages[lang]) + " \\\\ \\hline\n")
+            else:
+                stat_file.write(
+                    "  \\hyperref[lang:" + lang + "]{" + lang + "} & " + str(languages[lang]) + " \\\\ \\hline\n"
+                )
+        stat_file.write("\\end{tabular}\n")
+
+        # List of books per original language
+        stat_file.write("\\subsection*{Books listed for languages other than English} \\label{sec:language_list}\n\n")
+        for lang in sorted(languages):
+            if lang == "English":
+                continue
+            stat_file.write("\\subsubsection*{" + lang + "} \\label{lang:" + lang + "}\n\n")
+            counter = 1
+            for book in (book for book in books if book.language == lang):
+                title = re.sub(r" & ", r" \& ", book.title)
+                author = re.sub(r" & ", r" \& ", book.print_author)
+                stat_file.write(
+                    str(counter)
+                    + ". \\textit{\\hyperref[sec:"
+                    + book.reftitle
+                    + "]{"
+                    + title
+                    + "}} by "
+                    + author
+                    + " ("
+                    + book.print_year
+                    + ")\n\n"
+                )
+                counter = counter + 1
+
+        # Number of books per score
+        stat_file.write("\\subsection*{Books per personal score} \\label{sec:score_table}\n\n")
+        stat_file.write("\\begin{tabular}{|r|l|}\n")
+        stat_file.write("  \\hline\n")
+        stat_file.write("  \\textit{score} & \\textit{count} \\\\ \\hline\n")
+        for x in reversed(range(6)):
+            if x == 0:
+                stat_file.write("  \\hyperref[sec:score0]{Unscored")
+            else:
+                stat_file.write("  \\hyperref[sec:score" + str(x) + "]{" + str(x))
+            stat_file.write("} & " + str(scores[x]) + " \\\\ \\hline\n")
+        stat_file.write("\\end{tabular}\n")
+
+        # List of books per score
+        stat_file.write("\\subsection*{Books listed by score} \\label{sec:score_list}\n\n")
+        for x in reversed(range(6)):
+            if x == 0:
+                stat_file.write("\\subsubsection*{Unscored books} \\label{sec:score0}\n\n")
+            else:
+                stat_file.write(
+                    "\\subsubsection*{Books given a score of " + str(x) + "} \\label{sec:score" + str(x) + "}\n\n"
+                )
+            counter = 1
+            for book in (book for book in books if book.score == x):
+                title = re.sub(r" & ", r" \& ", book.title)
+                author = re.sub(r" & ", r" \& ", book.print_author)
+                stat_file.write(
+                    str(counter)
+                    + ". \\textit{\\hyperref[sec:"
+                    + book.reftitle
+                    + "]{"
+                    + title
+                    + "}} by "
+                    + author
+                    + " ("
+                    + book.print_year
+                    + ")\n\n"
+                )
+                counter = counter + 1
+
+        # List of series
+        stat_file.write("\\subsection*{List of series} \\label{sec:series_list}\n\n")
+        for series in sorted(series_dict, key=lambda s: re.sub(r"^(The|A|An|Der|Die|Das|Ein|Eine) ", "", s)):
+            stat_file.write("\\subsubsection*{" + series + "} \\label{series:" + series + "}\n\n")
+            counter = 1
+            series_books = sorted(
+                (book for book in books if book.series == series), key=operator.attrgetter("series_index")
+            )
+            for book in series_books:
+                title = re.sub(r" & ", r" \& ", book.title)
+                author = re.sub(r" & ", r" \& ", book.print_author)
+                stat_file.write(
+                    str(counter)
+                    + r". \textit{\hyperref[sec:"
+                    + book.reftitle
+                    + "]{"
+                    + title
+                    + r"}} (\#"
+                    + str(book.series_index)
+                    + ") by "
+                    + author
+                    + " ("
+                    + book.print_year
+                    + ")"
+                    + "\n\n"
+                )
+                counter = counter + 1
+
+        # Most read authors (using longtable to allow multi-page tables)
+        stat_file.write("\\subsection*{Most read authors} \\label{sec:author_table}\n\n")
+        stat_file.write("\\begin{longtable}{|r|l|}\n")
+        stat_file.write("  \\hline\n")
+        stat_file.write("  \\textit{author} & \\textit{count} \\\\ \\hline\n")
+        stat_file.write("  \\endfirsthead\n")  # End of first page header
+        stat_file.write("  \\hline\n")
+        stat_file.write("  \\textit{author} & \\textit{count} \\\\ \\hline\n")
+        stat_file.write("  \\endhead\n")  # Header repeated on subsequent pages
+        stat_file.write("  \\hline\n")
+        stat_file.write("  \\endfoot\n")  # Footer on each page except last
+        for author in sorted(authors, key=lambda x: len(x.books), reverse=True):
+            # List authors with more than two books read.
+            if len(author.books) > 2:
+                stat_file.write(
+                    "  \\hyperref[sec:"
+                    + author.label_name
+                    + "]{"
+                    + author.print_name
+                    + "} & "
+                    + str(len(author.books))
+                    + " \\\\ \\hline\n"
+                )
+        stat_file.write("\\end{longtable}\n")
+
+        # List of books by author (sorted by publication year)
+        stat_file.write("\\subsection*{Books listed by author} \\label{sec:author_list}\n\n")
+        for author in sorted(authors, key=operator.attrgetter("sort_name")):
+            stat_file.write("\\subsubsection*{" + author.print_name + "} \\label{sec:" + author.label_name + "}\n\n")
+            counter = 1
+            for book in sorted(author.books, key=lambda x: x.year):
+                title = re.sub(r" & ", r" \& ", book.title)
+                stat_file.write(
+                    str(counter)
+                    + ". \\textit{\\hyperref[sec:"
+                    + book.reftitle
+                    + "]{"
+                    + title
+                    + "}} ("
+                    + book.print_year
+                    + ")\n\n"
+                )
+                counter = counter + 1
+
+        # List of books by length of time spent reading them
+        stat_file.write("\\subsection*{Books listed by duration} \\label{sec:duration_list}\n\n")
+        for reading in sorted(readings, key=operator.attrgetter("duration")):
+            if reading.unknown or reading.unfinished or reading.date_strs[0] == 0:
+                continue
+            title = re.sub(r" & ", r" \& ", reading.book.title)
+            author = re.sub(r" & ", r" \& ", reading.book.print_author)
+            stat_file.write(
+                "\\textit{\\hyperref[sec:"
+                + reading.book.reftitle
+                + "]{"
+                + title
+                + "}} by "
+                + author
+                + " ("
+                + reading.book.print_year
+                + "): "
+                + str(reading.duration.days + 1)
+            )
+            if reading.duration.days == 0:  # 1 day
+                stat_file.write(" day\n\n")
+            else:
+                stat_file.write(" days\n\n")
+
+        # Calculate most number of books in progress at one time? Tedious!
 
 
-def parse_authors(authors, author_sort, author_print):
+def parse_authors(authors: list[Author], author_sort: str, author_print: str) -> list[Author]:
     # Parse the author strings and add to the author list if not there.
     # Returns the individual authors.
 
@@ -1132,7 +1149,7 @@ def parse_authors(authors, author_sort, author_print):
     # Remove leading and trailing whitespace from each author name.
     authors_sort = [x.strip(" ") for x in authors_sort]
     authors_print = [x.strip(" ") for x in authors_print]
-    book_authors = []
+    book_authors: list[Author] = []
 
     # Check if the sort version is already in the authors list. If not, create
     # it and add it. Compare author.label_name and authors_sort since neither
@@ -1153,13 +1170,12 @@ def parse_authors(authors, author_sort, author_print):
     return book_authors
 
 
-def fix_special_characters(line):
+def fix_special_characters(line: str) -> str:
     # Agape Agape and Kobo Abe are messed up because of the braces use in LaTeX
     # to represent the special characters in those names. Convert them to the
     # proper Unicode representation.
     line = re.sub(r"\\=\{(e)\}", "\u0113", line)
-    line = re.sub(r"\\=\{(o)\}", "\u014d", line)
-    return line
+    return re.sub(r"\\=\{(o)\}", "\u014d", line)
 
 
 if __name__ == "__main__":
