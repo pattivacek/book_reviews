@@ -6,6 +6,9 @@ import operator
 import re
 from pathlib import Path
 
+# Rotation angle for column headers in wide tables
+HEADER_ROTATION_ANGLE = 80
+
 
 class Book:
     """A description of a book"""
@@ -146,6 +149,13 @@ class Author:
             self.sort_name = sort_name
         self.print_name = print_name
         self.books: list[Book] = []  # list of Book records (written by this author)
+
+
+def format_avg(score_sum: int, scored_count: int) -> str:
+    """Format average score as string, or '-' if no scored books."""
+    if scored_count > 0:
+        return f"{score_sum / scored_count:.2f}"
+    return "-"
 
 
 def main() -> None:  # noqa: C901, PLR0912, PLR0915
@@ -495,11 +505,16 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     poetry_by_year = [0] * num_years_read
     graphic_by_year = [0] * num_years_read
     novels_by_year = [0] * num_years_read
+    score_sum_by_year = [0] * num_years_read
+    scored_count_by_year = [0] * num_years_read
 
     # Re-iterate through readings to calculate number of books read per year.
     for reading in readings:
         temp_year = 0 if reading.year_read == 0 else reading.year_read - min_year_read + 1
         finished_by_year[temp_year] = finished_by_year[temp_year] + 1
+        if reading.book.score > 0:
+            score_sum_by_year[temp_year] += reading.book.score
+            scored_count_by_year[temp_year] += 1
         if reading.unfinished:
             unfinished_by_year[temp_year] = unfinished_by_year[temp_year] + 1
         if reading.german:
@@ -546,6 +561,48 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     pub_2000s = 0
     pub_2010s = 0
     pub_2020s = 0
+    # Score sums for each era (for calculating averages)
+    pub_bce_score = 0
+    pub_1_1000_score = 0
+    pub_1001_1500_score = 0
+    pub_16th_score = 0
+    pub_17th_score = 0
+    pub_18th_score = 0
+    pub_19th_score = 0
+    pub_1900s_score = 0
+    pub_1910s_score = 0
+    pub_1920s_score = 0
+    pub_1930s_score = 0
+    pub_1940s_score = 0
+    pub_1950s_score = 0
+    pub_1960s_score = 0
+    pub_1970s_score = 0
+    pub_1980s_score = 0
+    pub_1990s_score = 0
+    pub_2000s_score = 0
+    pub_2010s_score = 0
+    pub_2020s_score = 0
+    # Count of scored books for each era (score > 0)
+    pub_bce_scored = 0
+    pub_1_1000_scored = 0
+    pub_1001_1500_scored = 0
+    pub_16th_scored = 0
+    pub_17th_scored = 0
+    pub_18th_scored = 0
+    pub_19th_scored = 0
+    pub_1900s_scored = 0
+    pub_1910s_scored = 0
+    pub_1920s_scored = 0
+    pub_1930s_scored = 0
+    pub_1940s_scored = 0
+    pub_1950s_scored = 0
+    pub_1960s_scored = 0
+    pub_1970s_scored = 0
+    pub_1980s_scored = 0
+    pub_1990s_scored = 0
+    pub_2000s_scored = 0
+    pub_2010s_scored = 0
+    pub_2020s_scored = 0
     countries = {}
     languages = {}
     scores = [0] * 6
@@ -565,44 +622,104 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
 
         if year < 0:
             pub_bce = pub_bce + 1
+            if book.score > 0:
+                pub_bce_score += book.score
+                pub_bce_scored += 1
         elif year <= 1000:
             pub_1_1000 = pub_1_1000 + 1
+            if book.score > 0:
+                pub_1_1000_score += book.score
+                pub_1_1000_scored += 1
         elif year <= 1500:
             pub_1001_1500 = pub_1001_1500 + 1
+            if book.score > 0:
+                pub_1001_1500_score += book.score
+                pub_1001_1500_scored += 1
         elif year <= 1600:
             pub_16th = pub_16th + 1
+            if book.score > 0:
+                pub_16th_score += book.score
+                pub_16th_scored += 1
         elif year <= 1700:
             pub_17th = pub_17th + 1
+            if book.score > 0:
+                pub_17th_score += book.score
+                pub_17th_scored += 1
         elif year <= 1800:
             pub_18th = pub_18th + 1
+            if book.score > 0:
+                pub_18th_score += book.score
+                pub_18th_scored += 1
         elif year <= 1900:
             pub_19th = pub_19th + 1
+            if book.score > 0:
+                pub_19th_score += book.score
+                pub_19th_scored += 1
         elif year <= 1910:
             pub_1900s = pub_1900s + 1
+            if book.score > 0:
+                pub_1900s_score += book.score
+                pub_1900s_scored += 1
         elif year <= 1920:
             pub_1910s = pub_1910s + 1
+            if book.score > 0:
+                pub_1910s_score += book.score
+                pub_1910s_scored += 1
         elif year <= 1930:
             pub_1920s = pub_1920s + 1
+            if book.score > 0:
+                pub_1920s_score += book.score
+                pub_1920s_scored += 1
         elif year <= 1940:
             pub_1930s = pub_1930s + 1
+            if book.score > 0:
+                pub_1930s_score += book.score
+                pub_1930s_scored += 1
         elif year <= 1950:
             pub_1940s = pub_1940s + 1
+            if book.score > 0:
+                pub_1940s_score += book.score
+                pub_1940s_scored += 1
         elif year <= 1960:
             pub_1950s = pub_1950s + 1
+            if book.score > 0:
+                pub_1950s_score += book.score
+                pub_1950s_scored += 1
         elif year <= 1970:
             pub_1960s = pub_1960s + 1
+            if book.score > 0:
+                pub_1960s_score += book.score
+                pub_1960s_scored += 1
         elif year <= 1980:
             pub_1970s = pub_1970s + 1
+            if book.score > 0:
+                pub_1970s_score += book.score
+                pub_1970s_scored += 1
         elif year <= 1990:
             pub_1980s = pub_1980s + 1
+            if book.score > 0:
+                pub_1980s_score += book.score
+                pub_1980s_scored += 1
         elif year <= 2000:
             pub_1990s = pub_1990s + 1
+            if book.score > 0:
+                pub_1990s_score += book.score
+                pub_1990s_scored += 1
         elif year <= 2010:
             pub_2000s = pub_2000s + 1
+            if book.score > 0:
+                pub_2000s_score += book.score
+                pub_2000s_scored += 1
         elif year <= 2020:
             pub_2010s = pub_2010s + 1
+            if book.score > 0:
+                pub_2010s_score += book.score
+                pub_2010s_scored += 1
         else:
             pub_2020s = pub_2020s + 1
+            if book.score > 0:
+                pub_2020s_score += book.score
+                pub_2020s_scored += 1
 
         if book.country in countries:
             countries[book.country] = countries[book.country] + 1
@@ -649,8 +766,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             + "\n"
         )
         stat_file.write(
-            r"\\\indent\hyperref[sec:finished_category]{Books Read per Year by Category} \dotfill \pageref{sec:finished_category}"
-            + "\n"
+            r"\\\indent\hyperref[sec:category_score]{Score per Category} \dotfill \pageref{sec:category_score}" + "\n"
         )
         stat_file.write(
             r"\\\indent\hyperref[sec:category_list]{List of Books per Category} \dotfill \pageref{sec:category_list}"
@@ -699,49 +815,157 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         )
         stat_file.write("\n")
 
+        # Add top-level Statistics bookmark
+        stat_file.write("\\pdfbookmark[0]{Statistics}{sec:statistics}\n")
+
         # Books per millenium/century/decade of publication.
+        stat_file.write("\\pdfbookmark[1]{Books per Publication Era}{sec:pubdate}\n")
         stat_file.write(
             "\\subsection*{Number of books read per era/decade of original publication, not counting re-readings} \\label{sec:pubdate}\n\n"
         )
-        stat_file.write("\\begin{tabular}{|r|l|}\n")
-        stat_file.write("  \\hline\n")
-        stat_file.write("  \\textit{era/decade} & \\textit{number read} \\\\ \\hline\n")
-        stat_file.write("  B.C.E. & " + str(pub_bce) + " \\\\ \\hline\n")
-        stat_file.write("  1-1000 & " + str(pub_1_1000) + " \\\\ \\hline\n")
-        stat_file.write("  1001-1500 & " + str(pub_1001_1500) + " \\\\ \\hline\n")
-        stat_file.write("  1501-1600 & " + str(pub_16th) + " \\\\ \\hline\n")
-        stat_file.write("  1601-1700 & " + str(pub_17th) + " \\\\ \\hline\n")
-        stat_file.write("  1701-1800 & " + str(pub_18th) + " \\\\ \\hline\n")
-        stat_file.write("  1801-1900 & " + str(pub_19th) + " \\\\ \\hline\n")
-        stat_file.write("  1901-1910 & " + str(pub_1900s) + " \\\\ \\hline\n")
-        stat_file.write("  1911-1920 & " + str(pub_1910s) + " \\\\ \\hline\n")
-        stat_file.write("  1921-1930 & " + str(pub_1920s) + " \\\\ \\hline\n")
-        stat_file.write("  1931-1940 & " + str(pub_1930s) + " \\\\ \\hline\n")
-        stat_file.write("  1941-1950 & " + str(pub_1940s) + " \\\\ \\hline\n")
-        stat_file.write("  1951-1960 & " + str(pub_1950s) + " \\\\ \\hline\n")
-        stat_file.write("  1961-1970 & " + str(pub_1960s) + " \\\\ \\hline\n")
-        stat_file.write("  1971-1980 & " + str(pub_1970s) + " \\\\ \\hline\n")
-        stat_file.write("  1981-1990 & " + str(pub_1980s) + " \\\\ \\hline\n")
-        stat_file.write("  1991-2000 & " + str(pub_1990s) + " \\\\ \\hline\n")
-        stat_file.write("  2001-2010 & " + str(pub_2000s) + " \\\\ \\hline\n")
-        stat_file.write("  2011-2020 & " + str(pub_2010s) + " \\\\ \\hline\n")
-        stat_file.write("  2021-2030 & " + str(pub_2020s) + " \\\\ \\hline\n")
-        stat_file.write("  total & " + str(len(books)) + " \\\\ \\hline\n")
-        stat_file.write("\\end{tabular}\n")
-
-        # Books read per year, including unfinished, German, and rereadings.
-        stat_file.write("\\subsection*{Number of books read per year} \\label{sec:finished_date}\n\n")
-        stat_file.write("\\begin{tabular}{|r|l|l|l|l|}\n")
+        stat_file.write("\\begin{tabular}{|r|l|l|l|}\n")
         stat_file.write("  \\hline\n")
         stat_file.write(
-            r"  \textit{year} & \textit{count} & "
-            + r"\textit{\hyperref[sec:unfinished_list]{unfinished}} & "
-            + r"\textit{German} & \textit{\hyperref[sec:rereading_list]{rereading}} \\ \hline"
+            "  \\textit{era/decade} & \\textit{number read} & \\textit{scored} & \\textit{avg score} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  B.C.E. & {pub_bce} & {pub_bce_scored} & {format_avg(pub_bce_score, pub_bce_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1-1000 & {pub_1_1000} & {pub_1_1000_scored} & {format_avg(pub_1_1000_score, pub_1_1000_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1001-1500 & {pub_1001_1500} & {pub_1001_1500_scored} & {format_avg(pub_1001_1500_score, pub_1001_1500_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1501-1600 & {pub_16th} & {pub_16th_scored} & {format_avg(pub_16th_score, pub_16th_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1601-1700 & {pub_17th} & {pub_17th_scored} & {format_avg(pub_17th_score, pub_17th_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1701-1800 & {pub_18th} & {pub_18th_scored} & {format_avg(pub_18th_score, pub_18th_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1801-1900 & {pub_19th} & {pub_19th_scored} & {format_avg(pub_19th_score, pub_19th_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1901-1910 & {pub_1900s} & {pub_1900s_scored} & {format_avg(pub_1900s_score, pub_1900s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1911-1920 & {pub_1910s} & {pub_1910s_scored} & {format_avg(pub_1910s_score, pub_1910s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1921-1930 & {pub_1920s} & {pub_1920s_scored} & {format_avg(pub_1920s_score, pub_1920s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1931-1940 & {pub_1930s} & {pub_1930s_scored} & {format_avg(pub_1930s_score, pub_1930s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1941-1950 & {pub_1940s} & {pub_1940s_scored} & {format_avg(pub_1940s_score, pub_1940s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1951-1960 & {pub_1950s} & {pub_1950s_scored} & {format_avg(pub_1950s_score, pub_1950s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1961-1970 & {pub_1960s} & {pub_1960s_scored} & {format_avg(pub_1960s_score, pub_1960s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1971-1980 & {pub_1970s} & {pub_1970s_scored} & {format_avg(pub_1970s_score, pub_1970s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1981-1990 & {pub_1980s} & {pub_1980s_scored} & {format_avg(pub_1980s_score, pub_1980s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  1991-2000 & {pub_1990s} & {pub_1990s_scored} & {format_avg(pub_1990s_score, pub_1990s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  2001-2010 & {pub_2000s} & {pub_2000s_scored} & {format_avg(pub_2000s_score, pub_2000s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  2011-2020 & {pub_2010s} & {pub_2010s_scored} & {format_avg(pub_2010s_score, pub_2010s_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write(
+            f"  2021-2030 & {pub_2020s} & {pub_2020s_scored} & {format_avg(pub_2020s_score, pub_2020s_scored)} \\\\ \\hline\n"
+        )
+        # Calculate total average score
+        total_score = (
+            pub_bce_score
+            + pub_1_1000_score
+            + pub_1001_1500_score
+            + pub_16th_score
+            + pub_17th_score
+            + pub_18th_score
+            + pub_19th_score
+            + pub_1900s_score
+            + pub_1910s_score
+            + pub_1920s_score
+            + pub_1930s_score
+            + pub_1940s_score
+            + pub_1950s_score
+            + pub_1960s_score
+            + pub_1970s_score
+            + pub_1980s_score
+            + pub_1990s_score
+            + pub_2000s_score
+            + pub_2010s_score
+            + pub_2020s_score
+        )
+        total_scored = (
+            pub_bce_scored
+            + pub_1_1000_scored
+            + pub_1001_1500_scored
+            + pub_16th_scored
+            + pub_17th_scored
+            + pub_18th_scored
+            + pub_19th_scored
+            + pub_1900s_scored
+            + pub_1910s_scored
+            + pub_1920s_scored
+            + pub_1930s_scored
+            + pub_1940s_scored
+            + pub_1950s_scored
+            + pub_1960s_scored
+            + pub_1970s_scored
+            + pub_1980s_scored
+            + pub_1990s_scored
+            + pub_2000s_scored
+            + pub_2010s_scored
+            + pub_2020s_scored
+        )
+        stat_file.write(
+            f"  total & {len(books)} & {total_scored} & {format_avg(total_score, total_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write("\\end{tabular}\n")
+
+        # Books read per year, including unfinished, German, rereadings, and category breakdown.
+        stat_file.write("\\pdfbookmark[1]{Books Read per Year}{sec:finished_date}\n")
+        stat_file.write("\\subsection*{Number of books read per year} \\label{sec:finished_date}\n\n")
+        stat_file.write("{\\small\n")  # Reduce font size for wide table
+        stat_file.write("\\begin{tabular}{|r|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|}\n")
+        stat_file.write("  \\hline\n")
+        rot = HEADER_ROTATION_ANGLE
+        stat_file.write(
+            f"  \\textit{{year}} & \\rotatebox{{{rot}}}{{\\textit{{count}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[sec:unfinished_list]{{unfinished}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{German}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[sec:rereading_list]{{rereading}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[category:nonfiction]{{nonfiction}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[category:collection]{{collection}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[category:novella]{{novella}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[category:shortstory]{{short}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[category:play]{{play}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[category:epicpoem]{{epic}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[category:poetry]{{poetry}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[category:graphicnovel]{{graphic}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{\\hyperref[category:novel]{{novel}}}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{scored}}}} & "
+            + f"\\rotatebox{{{rot}}}{{\\textit{{avg}}}} \\\\ \\hline"
             + "\n"
         )
         for x in range(num_years_read):
             if x == 0:
-                stat_file.write("  Unknown")
+                stat_file.write("  ?")
             else:
                 stat_file.write("  " + str(min_year_read + x - 1))
             stat_file.write(
@@ -753,6 +977,28 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 + str(german_by_year[x])
                 + " & "
                 + str(reread_by_year[x])
+                + " & "
+                + str(nonfiction_by_year[x])
+                + " & "
+                + str(collections_by_year[x])
+                + " & "
+                + str(novellas_by_year[x])
+                + " & "
+                + str(shorts_by_year[x])
+                + " & "
+                + str(plays_by_year[x])
+                + " & "
+                + str(epics_by_year[x])
+                + " & "
+                + str(poetry_by_year[x])
+                + " & "
+                + str(graphic_by_year[x])
+                + " & "
+                + str(novels_by_year[x])
+                + " & "
+                + str(scored_count_by_year[x])
+                + " & "
+                + format_avg(score_sum_by_year[x], scored_count_by_year[x])
                 + " \\\\ \\hline\n"
             )
         # Print totals of all years.
@@ -765,11 +1011,35 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             + str(sum(german_by_year))
             + " & "
             + str(sum(reread_by_year))
+            + " & "
+            + str(sum(nonfiction_by_year))
+            + " & "
+            + str(sum(collections_by_year))
+            + " & "
+            + str(sum(novellas_by_year))
+            + " & "
+            + str(sum(shorts_by_year))
+            + " & "
+            + str(sum(plays_by_year))
+            + " & "
+            + str(sum(epics_by_year))
+            + " & "
+            + str(sum(poetry_by_year))
+            + " & "
+            + str(sum(graphic_by_year))
+            + " & "
+            + str(sum(novels_by_year))
+            + " & "
+            + str(sum(scored_count_by_year))
+            + " & "
+            + format_avg(sum(score_sum_by_year), sum(scored_count_by_year))
             + " \\\\ \\hline\n"
         )
         stat_file.write("\\end{tabular}\n")
+        stat_file.write("}\\normalsize\n")  # Restore normal font size
 
         # List of unfinished books
+        stat_file.write("\\pdfbookmark[1]{Unfinished Books}{sec:unfinished_list}\n")
         stat_file.write("\\subsection*{List of unfinished books} \\label{sec:unfinished_list}\n\n")
         counter = 1
         for reading in (reading for reading in readings if reading.unfinished):
@@ -790,6 +1060,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             counter = counter + 1
 
         # List of rereadings
+        stat_file.write("\\pdfbookmark[1]{Re-read Books}{sec:rereading_list}\n")
         stat_file.write("\\subsection*{List of books read more than once} \\label{sec:rereading_list}\n\n")
         counter = 1
         for book in (book for book in books if len(book.reading) > 1):
@@ -808,74 +1079,6 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 + ")\n\n"
             )
             counter = counter + 1
-
-        # Books read by year, broken down by category.
-        stat_file.write("\\subsection*{Type of books read per year} \\label{sec:finished_category}\n\n")
-        stat_file.write("{\\small\n")  # Reduce font size for wide table
-        stat_file.write("\\begin{tabular}{|r|l|l|l|l|l|l|l|l|l|}\n")
-        stat_file.write("  \\hline\n")
-        stat_file.write(
-            r"  \textit{year} & \textit{\hyperref[category:nonfiction]{nonfiction}} & "
-            + r"\textit{\hyperref[category:collection]{collection}} & "
-            + r"\textit{\hyperref[category:novella]{novella}} & "
-            + r"\textit{\hyperref[category:shortstory]{short}} & "
-            + r"\textit{\hyperref[category:play]{play}} & "
-            + r"\textit{\hyperref[category:epicpoem]{epic}} & "
-            + r"\textit{\hyperref[category:poetry]{poetry}} & "
-            + r"\textit{\hyperref[category:graphicnovel]{graphic}} & "
-            + r"\textit{\hyperref[category:novel]{novel}} \\ \hline"
-            + "\n"
-        )
-        for x in range(num_years_read):
-            if x == 0:
-                stat_file.write("  Unknown")
-            else:
-                stat_file.write("  " + str(min_year_read + x - 1))
-            stat_file.write(
-                " & "
-                + str(nonfiction_by_year[x])
-                + " & "
-                + str(collections_by_year[x])
-                + " & "
-                + str(novellas_by_year[x])
-                + " & "
-                + str(shorts_by_year[x])
-                + " & "
-                + str(plays_by_year[x])
-                + " & "
-                + str(epics_by_year[x])
-                + " & "
-                + str(poetry_by_year[x])
-                + " & "
-                + str(graphic_by_year[x])
-                + " & "
-                + str(novels_by_year[x])
-                + " \\\\ \\hline\n"
-            )
-        # Print totals of all years.
-        stat_file.write(
-            "  total & "
-            + str(sum(nonfiction_by_year))
-            + " & "
-            + str(sum(collections_by_year))
-            + " & "
-            + str(sum(novellas_by_year))
-            + " & "
-            + str(sum(shorts_by_year))
-            + " & "
-            + str(sum(plays_by_year))
-            + " & "
-            + str(sum(epics_by_year))
-            + " & "
-            + str(sum(poetry_by_year))
-            + " & "
-            + str(sum(graphic_by_year))
-            + " & "
-            + str(sum(novels_by_year))
-            + " \\\\ \\hline\n"
-        )
-        stat_file.write("\\end{tabular}\n")
-        stat_file.write("}\\normalsize\n")  # Restore normal font size
 
         categories = [
             "Nonfiction",
@@ -900,6 +1103,35 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             "novel",
         ]
 
+        # Score per category table
+        stat_file.write("\\pdfbookmark[1]{Score per Category}{sec:category_score}\n")
+        stat_file.write("\\subsection*{Score per category} \\label{sec:category_score}\n\n")
+        stat_file.write("\\begin{tabular}{|r|l|l|l|}\n")
+        stat_file.write("  \\hline\n")
+        stat_file.write(
+            "  \\textit{category} & \\textit{count} & \\textit{scored} & \\textit{avg score} \\\\ \\hline\n"
+        )
+        total_cat_count = 0
+        total_cat_score = 0
+        total_cat_scored = 0
+        for x in range(len(categories)):
+            cat_books = [book for book in books if getattr(book, fields[x])]
+            cat_count = len(cat_books)
+            cat_score = sum(book.score for book in cat_books if book.score > 0)
+            cat_scored = sum(1 for book in cat_books if book.score > 0)
+            total_cat_count += cat_count
+            total_cat_score += cat_score
+            total_cat_scored += cat_scored
+            stat_file.write(
+                f"  \\hyperref[category:{fields[x]}]{{{categories[x]}}} & "
+                + f"{cat_count} & {cat_scored} & {format_avg(cat_score, cat_scored)} \\\\ \\hline\n"
+            )
+        stat_file.write(
+            f"  total & {total_cat_count} & {total_cat_scored} & {format_avg(total_cat_score, total_cat_scored)} \\\\ \\hline\n"
+        )
+        stat_file.write("\\end{tabular}\n\n")
+
+        stat_file.write("\\pdfbookmark[1]{Books by Category}{sec:category_list}\n")
         stat_file.write("\\subsection*{Books listed by category} \\label{sec:category_list}\n\n")
         for x in range(len(categories)):
             stat_file.write("\\subsubsection*{" + categories[x] + "} \\label{category:" + fields[x] + "}\n\n")
@@ -922,6 +1154,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 counter = counter + 1
 
         # Number of books per country
+        stat_file.write("\\pdfbookmark[1]{Books per Country}{sec:country_table}\n")
         stat_file.write(
             "\\subsection*{Books read per nation of origin of author/subject} \\label{sec:country_table}\n\n"
         )
@@ -938,6 +1171,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         stat_file.write("\\end{tabular}\n")
 
         # List of books per country
+        stat_file.write("\\pdfbookmark[1]{Books by Nation}{sec:country_list}\n")
         stat_file.write("\\subsection*{Books listed by nation} \\label{sec:country_list}\n\n")
         for nation in sorted(countries):
             # if nation == 'USA' or nation == 'England':
@@ -966,6 +1200,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         # does not equal the German-language count. First, some German-language
         # books were written by people ethnically not German (i.e. Kafka and Rilke).
         # Second, Loom of Language is English-language but written by a Swiss man.
+        stat_file.write("\\pdfbookmark[1]{Books per Language}{sec:language_table}\n")
         stat_file.write("\\subsection*{Books read per original language} \\label{sec:language_table}\n\n")
         stat_file.write("\\begin{tabular}{|r|l|}\n")
         stat_file.write("  \\hline\n")
@@ -980,6 +1215,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         stat_file.write("\\end{tabular}\n")
 
         # List of books per original language
+        stat_file.write("\\pdfbookmark[1]{Books by Language}{sec:language_list}\n")
         stat_file.write("\\subsection*{Books listed for languages other than English} \\label{sec:language_list}\n\n")
         for lang in sorted(languages):
             if lang == "English":
@@ -1004,6 +1240,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 counter = counter + 1
 
         # Number of books per score
+        stat_file.write("\\pdfbookmark[1]{Books per Score}{sec:score_table}\n")
         stat_file.write("\\subsection*{Books per personal score} \\label{sec:score_table}\n\n")
         stat_file.write("\\begin{tabular}{|r|l|}\n")
         stat_file.write("  \\hline\n")
@@ -1017,6 +1254,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         stat_file.write("\\end{tabular}\n")
 
         # List of books per score
+        stat_file.write("\\pdfbookmark[1]{Books by Score}{sec:score_list}\n")
         stat_file.write("\\subsection*{Books listed by score} \\label{sec:score_list}\n\n")
         for x in reversed(range(6)):
             if x == 0:
@@ -1044,13 +1282,19 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 counter = counter + 1
 
         # List of series
+        stat_file.write("\\pdfbookmark[1]{List of Series}{sec:series_list}\n")
         stat_file.write("\\subsection*{List of series} \\label{sec:series_list}\n\n")
         for series in sorted(series_dict, key=lambda s: re.sub(r"^(The|A|An|Der|Die|Das|Ein|Eine) ", "", s)):
             stat_file.write("\\subsubsection*{" + series + "} \\label{series:" + series + "}\n\n")
-            counter = 1
             series_books = sorted(
                 (book for book in books if book.series == series), key=operator.attrgetter("series_index")
             )
+            # Calculate average score for the series
+            series_score = sum(book.score for book in series_books if book.score > 0)
+            series_scored = sum(1 for book in series_books if book.score > 0)
+            if series_scored > 0:
+                stat_file.write(f"Average score: {format_avg(series_score, series_scored)}\n\n\\medskip\n\n")
+            counter = 1
             for book in series_books:
                 title = re.sub(r" & ", r" \& ", book.title)
                 author = re.sub(r" & ", r" \& ", book.print_author)
@@ -1072,19 +1316,22 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 counter = counter + 1
 
         # Most read authors (using longtable to allow multi-page tables)
+        stat_file.write("\\pdfbookmark[1]{Most Read Authors}{sec:author_table}\n")
         stat_file.write("\\subsection*{Most read authors} \\label{sec:author_table}\n\n")
-        stat_file.write("\\begin{longtable}{|r|l|}\n")
+        stat_file.write("\\begin{longtable}{|r|l|l|l|}\n")
         stat_file.write("  \\hline\n")
-        stat_file.write("  \\textit{author} & \\textit{count} \\\\ \\hline\n")
+        stat_file.write("  \\textit{author} & \\textit{count} & \\textit{scored} & \\textit{avg score} \\\\ \\hline\n")
         stat_file.write("  \\endfirsthead\n")  # End of first page header
         stat_file.write("  \\hline\n")
-        stat_file.write("  \\textit{author} & \\textit{count} \\\\ \\hline\n")
+        stat_file.write("  \\textit{author} & \\textit{count} & \\textit{scored} & \\textit{avg score} \\\\ \\hline\n")
         stat_file.write("  \\endhead\n")  # Header repeated on subsequent pages
         stat_file.write("  \\hline\n")
         stat_file.write("  \\endfoot\n")  # Footer on each page except last
         for author in sorted(authors, key=lambda x: len(x.books), reverse=True):
             # List authors with more than two books read.
             if len(author.books) > 2:
+                author_score = sum(book.score for book in author.books if book.score > 0)
+                author_scored = sum(1 for book in author.books if book.score > 0)
                 stat_file.write(
                     "  \\hyperref[sec:"
                     + author.label_name
@@ -1092,11 +1339,16 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                     + author.print_name
                     + "} & "
                     + str(len(author.books))
+                    + " & "
+                    + str(author_scored)
+                    + " & "
+                    + format_avg(author_score, author_scored)
                     + " \\\\ \\hline\n"
                 )
         stat_file.write("\\end{longtable}\n")
 
         # List of books by author (sorted by publication year)
+        stat_file.write("\\pdfbookmark[1]{Books by Author}{sec:author_list}\n")
         stat_file.write("\\subsection*{Books listed by author} \\label{sec:author_list}\n\n")
         for author in sorted(authors, key=operator.attrgetter("sort_name")):
             stat_file.write("\\subsubsection*{" + author.print_name + "} \\label{sec:" + author.label_name + "}\n\n")
@@ -1116,6 +1368,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 counter = counter + 1
 
         # List of books by length of time spent reading them
+        stat_file.write("\\pdfbookmark[1]{Books by Duration}{sec:duration_list}\n")
         stat_file.write("\\subsection*{Books listed by duration} \\label{sec:duration_list}\n\n")
         for reading in sorted(readings, key=operator.attrgetter("duration")):
             if reading.unknown or reading.unfinished or reading.date_strs[0] == 0:
