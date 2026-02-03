@@ -1,4 +1,4 @@
-.PHONY: all toc clean_pdf clean force
+.PHONY: all toc clean_pdf clean force lint lint-fix format
 
 TEX = pdflatex -halt-on-error -file-line-error
 
@@ -24,3 +24,11 @@ clean: clean_pdf
 %.pdf: %.tex statistics.tex
 	$(TEX) $<
 
+lint:
+	uv run ruff check calculate_stats.py
+
+lint-fix:
+	uv run ruff check --fix calculate_stats.py
+
+format:
+	uv run ruff format calculate_stats.py

@@ -1,0 +1,35 @@
+[project]
+name = "book-reviews"
+version = "1.0.0"
+description = "Book reviews statistics generator"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812",  # conflicts with formatter
+    "COM819",  # conflicts with formatter
+    "D",       # docstrings not required for this codebase
+    "E501",    # line too long - handled by formatter
+    "ERA001",  # commented-out code kept for reference
+    "ISC001",  # conflicts with formatter
+    "ISC003",  # conflicts with formatter
+    "PLR2004", # magic values - years and counts are self-documenting
+    "T201",    # `print` found - this is a CLI script
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.14",
+]

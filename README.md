@@ -9,8 +9,16 @@ After compiling, you should see a few additional files. booklist.csv is a comma-
 
 # Dependencies
 
-This project requires Python (preferably Python 3) and pdflatex with the German language extension. This should work on Ubuntu:
+This project requires Python 3.12+ and pdflatex with the German language extension. This should work on Ubuntu:
 
 ```
 sudo apt install texlive-latex-extra texlive-lang-german
 ```
+
+For linting, [uv](https://docs.astral.sh/uv/) is required. Install it with:
+
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Then run `uv sync` to install development dependencies (ruff).

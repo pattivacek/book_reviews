@@ -7,7 +7,6 @@ import re
 from pathlib import Path
 
 
-
 class Book:
     """A description of a book"""
 
