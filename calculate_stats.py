@@ -6,9 +6,6 @@ import csv
 import operator
 import datetime
 
-# TODO:
-#
-# Review German-language authors for nationality: Joseph Roth???
 
 class Book:
     """A description of a book"""
